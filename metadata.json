@@ -1,0 +1,6 @@
+{
+  "name": "MAHFOUD — Gagne tes premiers 1000 DH sur internet",
+  "description": "La méthode MAHFOUD étape par étape pour gagner tes premiers 1000 DH sur internet, même si tu pars de zéro. Formation complète en Français et Darija.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -5,4 +5,4 @@ Allow: /
 User-agent: Mediapartners-Google
 Allow: /
 
-Sitemap: SITE_URL/sitemap.xml
+Sitemap: https://mahfoud.xyz/sitemap.xml

@@ -594,8 +594,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 5. PUB ADSENSE 2 */}
-        <AdSenseUnit id="adsense-2" />
+  
 
         {/* 6. AVIS (Salma de Casablanca, Yassine de Fès, Imane de Rabat) */}
         <section

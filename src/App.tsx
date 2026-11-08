@@ -3,1022 +3,2012 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  ArrowUpRight,
+  ArrowRight,
+  BookOpen,
   Check,
-  ChevronDown,
-  Lock,
-  Mail,
-  MessageCircle,
-  ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Code2,
+  Copy,
+  Cpu,
+  ExternalLink,
+  Layers,
+  List,
+  Menu,
+  Moon,
+  Search,
+  Share2,
+  Sparkles,
+  Sun,
+  Wrench,
   X,
 } from 'lucide-react';
+import { SITE_CONFIG } from './config/siteConfig';
+import { CATEGORIES, CategoryInfo, getCategoryBySlug } from './data/categories';
+import { ARTICLES, Article, getArticleBySlug, getArticlesForCategory } from './data/articles';
+import { TOOLS, getToolBySlug } from './data/tools';
+import { SeoHead } from './components/SeoHead';
+import { InteractiveToolWidget } from './components/InteractiveTools';
+import { AboutPage, ContactPage, LegalPage } from './components/StaticPages';
 
-declare global {
-  interface Window {
-    adsbygoogle?: unknown[];
+// Resilient image component with fallback and explicit dimensions
+const SafeImage: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+  eager?: boolean;
+}> = ({ src, alt, className = '', eager = false }) => {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div
+        className={`flex flex-col items-center justify-center bg-slate-900 text-slate-200 p-6 text-center ${className}`}
+      >
+        <Cpu className="w-8 h-8 text-blue-400 mb-2" />
+        <span className="text-xs font-mono uppercase tracking-wider text-blue-400">
+          {SITE_CONFIG.name}
+        </span>
+        <span className="text-xs text-slate-400 mt-1 line-clamp-2 max-w-xs">{alt}</span>
+      </div>
+    );
   }
-}
-
-const PAYHIP_URL = 'https://payhip.com/b/8cbQk';
-const CONTACT_EMAIL = 'mustaphasoufisme@gmail.com';
-const HERO_IMAGE_PATH = '/src/assets/images/hero_mahfoud_method_1794016407072.jpg';
-
-interface ModuleItem {
-  id: number;
-  numberLabel: string;
-  title: string;
-  darijaSubtitle: string;
-  description: string;
-  deliverable: string;
-  duration: string;
-  steps: string[];
-  featured?: boolean;
-}
-
-const MODULES: ModuleItem[] = [
-  {
-    id: 1,
-    numberLabel: 'Module 1',
-    title: 'Module 1 : Les bases',
-    darijaSubtitle: 'Kifach kaykhdem l’business digital f l’Maghrib bla ta39id',
-    description:
-      'Comprends exactement comment fonctionne la vente de produits digitaux sur internet au Maroc et à l’international, sans stock, sans livraison et sans capital de départ.',
-    deliverable: 'Feuille de route de démarrage + checklist des outils 100% gratuits',
-    duration: '45 min',
-    steps: [
-      'Comprendre le modèle des produits numériques à marge 100%',
-      'Les erreurs classiques des débutants (et comment les éviter dès le jour 1)',
-      'Préparer ton téléphone ou PC pour travailler efficacement en 1h par jour',
-    ],
-  },
-  {
-    id: 2,
-    numberLabel: 'Module 2',
-    title: 'Module 2 : Trouver une idée rentable',
-    darijaSubtitle: 'L9a fikra li nass مستعدين ikhalsou 3liha daba',
-    description:
-      'La méthode exacte pour repérer un problème précis que les gens cherchent à résoudre aujourd’hui et le transformer en une offre simple qui se vend.',
-    deliverable: 'Liste de 15 niches rentables validées + grille de sélection rapide',
-    duration: '50 min',
-    steps: [
-      'Identifier les sujets qui génèrent des achats impulsifs entre 50 DH et 200 DH',
-      'Valider la demande réelle sur TikTok et Instagram en 15 minutes',
-      'Choisir ton positionnement clair même si tu n’as aucune expertise technique',
-    ],
-  },
-  {
-    id: 3,
-    numberLabel: 'Module 3',
-    title: 'Module 3 : Créer ton produit en 1 jour',
-    darijaSubtitle: 'Sawb l’produit dyalek f nhar wahed b tari9a ihtirafiya',
-    description:
-      'Pas besoin d’écrire 200 pages. Apprends à structurer et produire un guide pratique, un mini-atelier ou un pack de templates prêt à être téléchargé en moins de 24 heures.',
-    deliverable: 'Modèles Canva prêts à remplir + structure de guide étape par étape',
-    duration: '1h 15',
-    featured: true,
-    steps: [
-      'La structure en 5 parties d’un guide numérique que les clients lisent vraiment',
-      'Mise en page propre et professionnelle sur Canva (sans être designer)',
-      'Exporter ton fichier PDF final et préparer le lien de livraison automatique',
-    ],
-  },
-  {
-    id: 4,
-    numberLabel: 'Module 4',
-    title: 'Module 4 : Créer ta page de vente',
-    darijaSubtitle: 'Page de vente kat9ne3 l’client ichri bla ma t7taj t7awer m3ah',
-    description:
-      'Construis une page claire, rapide et persuasive sur Payhip qui présente ton offre, répond aux objections et encaisse automatiquement 24h/24.',
-    deliverable: 'Template de texte de vente (Français + Darija) prêt à copier-coller',
-    duration: '1h 00',
-    steps: [
-      'Écrire un titre accrocheur qui capte l’attention immédiatement',
-      'Présenter tes modules et ta garantie pour inspirer confiance',
-      'Paramétrer Payhip en 15 minutes pour livrer le produit instantanément après achat',
-    ],
-  },
-  {
-    id: 5,
-    numberLabel: 'Module 5',
-    title: 'Module 5 : Trouver des clients sur TikTok',
-    darijaSubtitle: 'Jib l’clients men TikTok bla ma tban b wejhek ila ma bghitich',
-    description:
-      'Le système de contenu organique pour attirer des acheteurs qualifiés tous les jours sur TikTok et Instagram Reels sans dépenser 1 DH en publicité payante.',
-    deliverable: '20 scripts de vidéos courtes + formules d’accroches virales',
-    duration: '1h 20',
-    featured: true,
-    steps: [
-      'La formule des vidéos de 15 à 30 secondes qui transforment les vues en clics',
-      'Comment créer du contenu "faceless" (sans montrer ton visage) propre et crédible',
-      'Optimiser ta bio et ton lien pour convertir les visiteurs en acheteurs à 50 DH+',
-    ],
-  },
-  {
-    id: 6,
-    numberLabel: 'Module 6',
-    title: 'Module 6 : Encaisser tes premiers paiements',
-    darijaSubtitle: 'Kifach t9bel l’khlass b la carte bancaire w t7awel floussek',
-    description:
-      'Configure tes moyens de paiement en toute sécurité pour recevoir tes ventes par carte bancaire et retirer tes gains vers ton compte au Maroc.',
-    deliverable: 'Guide complet de configuration Payhip + suivi de tes premiers 1000 DH',
-    duration: '40 min',
-    steps: [
-      'Relier ton compte de paiement à Payhip étape par étape',
-      'Gérer la livraison automatique du fichier et l’email de confirmation client',
-      'Plan d’action sur 14 jours pour passer de ta 1ère vente à la barre des 1000 DH',
-    ],
-  },
-];
-
-interface Testimonial {
-  name: string;
-  city: string;
-  role: string;
-  resultMetric: string;
-  timeframe: string;
-  quoteFr: string;
-  quoteDarija: string;
-}
-
-const TESTIMONIALS: Testimonial[] = [
-  {
-    name: 'Salma de Casablanca',
-    city: 'Casablanca',
-    role: 'Étudiante en gestion',
-    resultMetric: '1 350 DH générés',
-    timeframe: 'En 11 jours',
-    quoteFr:
-      'Je partais de zéro complet. J’ai appliqué le Module 3 un dimanche pour créer mon guide d’organisation et publié 4 vidéos avec les scripts du Module 5. J’ai fait mes 27 premières ventes à 50 DH en moins de deux semaines.',
-    quoteDarija:
-      'Wallah ma kount 3arfa mnin نبدا. La méthode MAHFOUD sahla bzaf w kolchi mchrou7 b تفصيل.',
-  },
-  {
-    name: 'Yassine de Fès',
-    city: 'Fès',
-    role: 'Jeune diplômé',
-    resultMetric: '1 100 DH encaissés',
-    timeframe: 'Dès sa 1ère semaine',
-    quoteFr:
-      'Ce qui m’a débloqué c’est la partie sur Payhip et TikTok sans montrer son visage. Ma page de vente était prête en une soirée et mon premier paiement est tombé le lendemain soir.',
-    quoteDarija:
-      '50 DH hiya a7san investissement drtou had l’3am. Rbe7t ktar men 20 merra taman l’formation.',
-  },
-  {
-    name: 'Imane de Rabat',
-    city: 'Rabat',
-    role: 'Freelance débutante',
-    resultMetric: '1 600 DH de ventes',
-    timeframe: 'Sur son 1er mois',
-    quoteFr:
-      'J’avais peur du côté technique et des paiements en ligne. Le Module 6 montre exactement où cliquer étape par étape. Aujourd’hui mes clients reçoivent leur fichier automatiquement même quand je dors.',
-    quoteDarija:
-      'Chokran MAHFOUD! Tari9a na9ya, mafihach l’hedra l’khawya, ghir tatbi9 nichan.',
-  },
-];
-
-interface FaqItem {
-  question: string;
-  shortTag: string;
-  answerFr: string;
-  answerDarija: string;
-}
-
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    shortTag: 'Débutant ?',
-    question: 'Débutant ? Est-ce que la formation est adaptée si je pars de zéro ?',
-    answerFr:
-      'Oui, à 100%. La méthode MAHFOUD a été conçue spécifiquement pour ceux qui n’ont jamais rien vendu sur internet. Chaque étape est filmée et expliquée simplement, sans jargon technique, et tu peux tout appliquer depuis un simple smartphone ou un ordinateur.',
-    answerDarija:
-      'Wakha ma 3emrek b3ti 7ta درهم f internet, ghatb3 l’khotowat wa7da b wa7da men Module 1 tal Module 6.',
-  },
-  {
-    shortTag: 'Comment je reçois le produit ?',
-    question: 'Comment je reçois le produit après mon achat ?',
-    answerFr:
-      'L’accès est immédiat et automatique. Dès que ton paiement de 50 DH est validé sur Payhip, tu es redirigé vers la page de téléchargement et tu reçois également un email instantané avec ton accès complet aux 6 modules.',
-    answerDarija:
-      'Mor l’khlass nichan kaytle3 lik lien dyal téléchargement w kayوصلك email fih kolchi f نفس الدقيقة.',
-  },
-  {
-    shortTag: 'Paiement ?',
-    question: 'Paiement ? Est-ce que le paiement de 50 DH est sécurisé ?',
-    answerFr:
-      'Oui, tous les paiements sont traités de manière 100% sécurisée via la plateforme internationale Payhip par carte bancaire (Visa, Mastercard, CMI dotation e-commerce). Aucune information bancaire n’est stockée sur notre site.',
-    answerDarija:
-      'L’khlass sécurisé 100% via Payhip b la carte bancaire dyalek bla 7ta mochkil.',
-  },
-  {
-    shortTag: 'Remboursement ?',
-    question: 'Remboursement ? Comment fonctionne la garantie de 7 jours ?',
-    answerFr:
-      'Tu bénéficies d’une garantie satisfait ou remboursé de 7 jours. Si tu suis les modules et que tu estimes que la méthode ne t’apporte pas la valeur promise, il te suffit d’envoyer un email à mustaphasoufisme@gmail.com dans les 7 jours suivant ton achat.',
-    answerDarija:
-      '3ndek Garantie 7 jours: ila ma 3jbatekch la méthode, sifth lina email w nrej3ou lik floussek.',
-  },
-];
-
-function AdSenseUnit({ id }: { id: 'adsense-1' | 'adsense-2' }) {
-  useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {
-      // AdSense script handles duplicate pushes or preview sandbox gracefully
-    }
-  }, []);
 
   return (
-    <section aria-label="Annonce" className="max-w-6xl mx-auto px-4 sm:px-6 my-6">
-      <div
-        id={id}
-        className="w-full min-h-[90px] overflow-hidden"
-        dangerouslySetInnerHTML={{
-          __html: `<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-5562107411098538" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script>`,
-        }}
-      />
-    </section>
+    <img
+      src={src}
+      alt={alt}
+      width={800}
+      height={450}
+      loading={eager ? 'eager' : 'lazy'}
+      referrerPolicy="no-referrer"
+      onError={() => setError(true)}
+      className={className}
+    />
   );
-}
+};
+
+// Reusable Newsletter Form without false promises
+const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) {
+      setStatus('error');
+      return;
+    }
+    setStatus('success');
+    setEmail('');
+  };
+
+  return (
+    <div
+      className={
+        compact
+          ? 'p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
+          : 'p-8 sm:p-10 rounded-2xl bg-slate-900 text-white border border-slate-800'
+      }
+    >
+      <div className="max-w-2xl">
+        <div
+          className={`text-xs font-semibold mb-2 ${
+            compact ? 'text-blue-600 dark:text-blue-400' : 'text-blue-400'
+          }`}
+        >
+          Veille Technique & Tutoriels
+        </div>
+        <h3
+          className={`font-extrabold tracking-tight mb-2 ${
+            compact ? 'text-lg text-slate-900 dark:text-white' : 'text-2xl sm:text-3xl text-white'
+          }`}
+        >
+          {SITE_CONFIG.newsletter.title}
+        </h3>
+        <p
+          className={`text-sm leading-relaxed mb-5 ${
+            compact ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300'
+          }`}
+        >
+          {SITE_CONFIG.newsletter.description}
+        </p>
+
+        {status === 'success' ? (
+          <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 text-xs sm:text-sm font-semibold flex items-center gap-2">
+            <Check className="w-4 h-4 shrink-0" />
+            <span>Inscription enregistrée. Merci pour votre intérêt !</span>
+          </div>
+        ) : (
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2.5" noValidate>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (status !== 'idle') setStatus('idle');
+              }}
+              placeholder="Votre adresse email..."
+              aria-label="Adresse email pour la newsletter"
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm border focus:outline-none focus:border-blue-500 ${
+                compact
+                  ? 'bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100'
+                  : 'bg-slate-950 border-slate-700 text-white'
+              }`}
+            />
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+            >
+              {SITE_CONFIG.newsletter.buttonLabel}
+            </button>
+          </form>
+        )}
+        {status === 'error' && (
+          <p className="text-xs text-red-500 mt-2">
+            Veuillez saisir une adresse email valide.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Reusable Article Card
+const ArticleCard: React.FC<{
+  article: Article;
+  onNavigate: (path: string) => void;
+}> = ({ article, onNavigate }) => {
+  return (
+    <article className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between">
+      <div>
+        <div
+          onClick={() => onNavigate(article.url)}
+          className="aspect-16/9 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer"
+        >
+          <SafeImage
+            src={article.image}
+            alt={article.imageAlt}
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
+          />
+        </div>
+
+        <div className="p-5 sm:p-6">
+          {/* Clean unboxed metadata per Zero-Pill Discipline */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2.5">
+            <button
+              type="button"
+              onClick={() => onNavigate(`/${article.categorySlug}/`)}
+              className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+            >
+              {article.categoryName}
+            </button>
+            <span aria-hidden="true">·</span>
+            <span>{article.date}</span>
+            <span aria-hidden="true">·</span>
+            <span className="font-mono tabular-nums">{article.readTime}</span>
+          </div>
+
+          <h3
+            onClick={() => onNavigate(article.url)}
+            className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug mb-2.5"
+          >
+            {article.title}
+          </h3>
+
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
+            {article.excerpt}
+          </p>
+        </div>
+      </div>
+
+      <div className="px-5 sm:px-6 pb-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {article.isCompleteGuide ? 'Guide complet' : 'Tutoriel pratique'}
+        </span>
+        <button
+          type="button"
+          onClick={() => onNavigate(article.url)}
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+        >
+          <span>Lire l'article</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </article>
+  );
+};
 
 export default function App() {
-  const [selectedModuleId, setSelectedModuleId] = useState<number>(1);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number>(0);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState<boolean>(false);
-  const [cookiesAccepted, setCookiesAccepted] = useState<boolean>(() => {
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname || '/';
+    }
+    return '/';
+  });
+
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('mahfoud_cookies_accepted') === 'true';
+      return localStorage.getItem('techialab_theme') === 'dark';
     } catch {
       return false;
     }
   });
-  const [whatsAppDrawerOpen, setWhatsAppDrawerOpen] = useState<boolean>(false);
-  const [heroImageError, setHeroImageError] = useState<boolean>(false);
-  const [targetSalesCount, setTargetSalesCount] = useState<number>(20);
 
-  const activeModule =
-    MODULES.find((m) => m.id === selectedModuleId) || MODULES[0];
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [categoryPageIndex, setCategoryPageIndex] = useState<number>(1);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState<boolean>(false);
+  const [cookiesAccepted, setCookiesAccepted] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('techialab_cookies_accepted') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Sync dark mode class on <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('techialab_theme', darkMode ? 'dark' : 'light');
+    } catch {
+      // Ignore storage restrictions
+    }
+  }, [darkMode]);
+
+  // Listen to browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname || '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigate = (path: string) => {
+    const normalized = path.startsWith('/') ? path : `/${path}`;
+    setCurrentPath(normalized);
+    setMobileMenuOpen(false);
+    setSearchModalOpen(false);
+    setCategoryPageIndex(1);
+    try {
+      window.history.pushState({}, '', normalized);
+    } catch {
+      // Fallback in sandboxed iframe if pushState is restricted
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Global internal search across Articles, Categories, Tools, and Guides
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      return {
+        articles: ARTICLES.slice(0, 4),
+        tools: TOOLS.slice(0, 4),
+        categories: CATEGORIES.slice(0, 5),
+      };
+    }
+
+    const matchedArticles = ARTICLES.filter(
+      (a) =>
+        a.title.toLowerCase().includes(q) ||
+        a.excerpt.toLowerCase().includes(q) ||
+        a.categoryName.toLowerCase().includes(q) ||
+        a.sections.some((s) => s.h2.toLowerCase().includes(q))
+    );
+
+    const matchedTools = TOOLS.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.summary.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q)
+    );
+
+    const matchedCategories = CATEGORIES.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.seoDescription.toLowerCase().includes(q) ||
+        c.topics.some((topic) => topic.toLowerCase().includes(q))
+    );
+
+    return {
+      articles: matchedArticles,
+      tools: matchedTools,
+      categories: matchedCategories,
+    };
+  }, [searchQuery]);
+
+  // Route matching logic
+  const route = useMemo(() => {
+    const clean = currentPath.replace(/\/+$/, '') || '/';
+    if (clean === '/') return { type: 'home' as const };
+    if (clean === '/a-propos') return { type: 'about' as const };
+    if (clean === '/contact') return { type: 'contact' as const };
+    if (clean === '/confidentialite') return { type: 'legal' as const, subtype: 'confidentialite' as const };
+    if (clean === '/mentions-legales') return { type: 'legal' as const, subtype: 'mentions-legales' as const };
+    if (clean === '/conditions-utilisation') return { type: 'legal' as const, subtype: 'conditions-utilisation' as const };
+    if (clean === '/outils') return { type: 'tools-hub' as const };
+    if (clean === '/guides') return { type: 'guides-hub' as const };
+
+    if (clean.startsWith('/outils/')) {
+      const slug = clean.replace('/outils/', '');
+      const tool = getToolBySlug(slug);
+      if (tool) return { type: 'tool-detail' as const, tool };
+    }
+
+    if (clean.startsWith('/article/')) {
+      const slug = clean.replace('/article/', '');
+      const article = getArticleBySlug(slug);
+      if (article) return { type: 'article-detail' as const, article };
+    }
+
+    const catSlug = clean.replace(/^\//, '');
+    const category = getCategoryBySlug(catSlug);
+    if (category) return { type: 'category-detail' as const, category };
+
+    return { type: 'home' as const };
+  }, [currentPath]);
+
+  const handleCopyCode = (id: string, code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodeId(id);
+    setTimeout(() => setCopiedCodeId(null), 2000);
+  };
+
+  const handleShareCopy = () => {
+    const url = typeof window !== 'undefined' ? window.location.href : SITE_CONFIG.siteUrl;
+    navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  };
 
   const handleAcceptCookies = () => {
     setCookiesAccepted(true);
     try {
-      localStorage.setItem('mahfoud_cookies_accepted', 'true');
+      localStorage.setItem('techialab_cookies_accepted', 'true');
     } catch {
-      // Ignore storage error in restricted mode
+      // Ignore storage errors
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsPrivacyOpen(false);
-        setWhatsAppDrawerOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // reusable Desktop Sidebar (moves below content on mobile)
+  const renderSidebar = () => (
+    <aside className="space-y-6">
+      {/* Sidebar Search */}
+      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+          Recherche rapide
+        </h3>
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setSearchModalOpen(true);
+            }}
+            onFocus={() => setSearchModalOpen(true)}
+            placeholder="Articles, outils, Python, KDP..."
+            aria-label="Rechercher sur le site"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-blue-600"
+          />
+        </div>
+      </div>
+
+      {/* Sidebar Categories */}
+      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+          Catégories principales
+        </h3>
+        <ul className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs sm:text-sm">
+          {CATEGORIES.slice(0, 10).map((cat) => (
+            <li key={cat.slug} className="py-2 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => navigate(cat.url)}
+                className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-left cursor-pointer"
+              >
+                {cat.name}
+              </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Popular Articles */}
+      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+          Guides populaires
+        </h3>
+        <div className="space-y-4">
+          {ARTICLES.slice(0, 4).map((art, i) => (
+            <div
+              key={art.id}
+              onClick={() => navigate(art.url)}
+              className="group cursor-pointer flex items-start gap-3"
+            >
+              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 tabular-nums">
+                0{i + 1}
+              </span>
+              <div>
+                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug">
+                  {art.title}
+                </h4>
+                <span className="text-[11px] text-slate-500 font-mono">{art.readTime}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sidebar Newsletter */}
+      <NewsletterBox compact />
+    </aside>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-stone-900">
-      {/* 1. HEADER FIXE (Strict 3-Zone Top Bar Contract) */}
-      <header className="sticky top-0 z-40 h-14 sm:h-16 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-stone-200/80">
-        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-8">
-          {/* Zone 1: Single text element wordmark */}
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* HEADER PRINCIPAL */}
+      <header className="sticky top-0 z-40 h-16 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4 sm:gap-8">
+          {/* Zone 1: Brand Wordmark */}
           <a
-            href="#"
-            className="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-950 whitespace-nowrap shrink-0"
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/');
+            }}
+            className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0"
           >
-            MAHFOUD
+            {SITE_CONFIG.name}
           </a>
-        
 
-          {/* Zone 2: 4 concise single-line navigation links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
-            <a
-              href="#programme"
-              className="hover:text-stone-950 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
-            >
-              Programme
-            </a>
-            <a
-              href="#avis"
-              className="hover:text-stone-950 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
-            >
-              Avis
-            </a>
-            <a
-              href="#prix"
-              className="hover:text-stone-950 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
-            >
-              Tarif
-            </a>
-            <a
-              href="#faq"
-              className="hover:text-stone-950 hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0"
-            >
-              FAQ
-            </a>
+          {/* Zone 2: Navigation Links */}
+          <nav
+            aria-label="Navigation principale"
+            className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300"
+          >
+            {SITE_CONFIG.headerNav.map((item) => {
+              const isActive =
+                item.path === '/'
+                  ? currentPath === '/'
+                  : currentPath.startsWith(item.path.replace(/\/$/, ''));
+              return (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(item.path);
+                  }}
+                  className={`hover:text-blue-600 dark:hover:text-blue-400 transition-colors whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-400 font-bold underline underline-offset-8'
+                      : ''
+                  }`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
           </nav>
 
-          {/* Zone 3: 1 primary action */}
-          <div className="flex items-center shrink-0">
-            <a
-              href={PAYHIP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#FF5A00] hover:bg-[#E04F00] rounded-lg transition-colors whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5A00]"
+          {/* Zone 3: Search + Theme Toggle + Mobile Menu */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setSearchModalOpen(true)}
+              aria-label="Rechercher sur le site"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 cursor-pointer whitespace-nowrap shrink-0"
             >
-              <span>Acheter - 50 DH</span>
-              <ArrowUpRight className="w-4 h-4 shrink-0" />
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1">
-        {/* 2. HERO SECTION */}
-        <section className="pt-8 pb-12 sm:pt-14 sm:pb-16 border-b border-stone-200/80">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-stretch">
-              {/* Left Column: Core Proposition */}
-              <div className="lg:col-span-7 flex flex-col justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-stone-600 mb-4">
-                    <span className="text-[#FF5A00] font-semibold">
-                      Formation Pratique Français + Darija
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <span>6 Modules Étape par Étape</span>
-                    <span aria-hidden="true">·</span>
-                    <span>Accès Immédiat</span>
-                  </div>
-
-                  <h1
-                    className="font-extrabold tracking-tight text-stone-950 leading-[1.08] mb-5"
-                    style={{ fontSize: 'clamp(2.25rem, 4vw, 3.6rem)' }}
-                  >
-                    Gagne tes premiers 1000 DH sur internet, sans expérience.
-                  </h1>
-
-                  <p className="text-base sm:text-lg text-stone-700 leading-relaxed max-w-2xl mb-4">
-                    La méthode MAHFOUD, étape par étape, même si tu pars de zéro.
-                  </p>
-
-                  <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-xl mb-8">
-                    Bla ma tkoun expert f l’informatique w bla rasmale kbir :
-                    découvre comment créer un produit digital simple en 1 jour,
-                    attirer tes premiers acheteurs sur TikTok et encaisser tes
-                    paiements sur Payhip.
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
-                    <a
-                      href={PAYHIP_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2.5 px-7 py-4 text-sm sm:text-base font-extrabold text-white bg-[#FF5A00] hover:bg-[#E04F00] rounded-xl shadow-sm transition-transform active:scale-[0.99] whitespace-nowrap shrink-0"
-                    >
-                      <span>JE VEUX COMMENCER - 50 DH</span>
-                      <ArrowUpRight className="w-5 h-5 shrink-0" />
-                    </a>
-
-                    <div className="flex items-baseline gap-2 text-sm text-stone-600 font-mono tabular-nums">
-                      <span className="line-through text-stone-400">499 DH</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="font-bold text-stone-900">
-                        50 DH seulement aujourd’hui
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Preuve obligatoire (clean unboxed text) */}
-                  <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-medium text-stone-700 pt-2 border-t border-stone-200/80">
-                    <span className="font-semibold text-stone-950">
-                      ⭐ 4.9/5 - Paiement sécurisé
-                    </span>
-                    <span aria-hidden="true" className="text-stone-300">
-                      ·
-                    </span>
-                    <span>Livraison instantanée via Payhip</span>
-                    <span aria-hidden="true" className="text-stone-300">
-                      ·
-                    </span>
-                    <span>Garantie 7 jours</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Visual Showcase & Interactive Goal Calculator */}
-              <div className="lg:col-span-5 flex flex-col justify-between bg-white rounded-2xl border border-stone-200/90 overflow-hidden">
-                <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden">
-                  {!heroImageError ? (
-                    <img
-                      src={HERO_IMAGE_PATH}
-                      alt="Espace de travail méthode MAHFOUD — guide pratique et ordinateur"
-                      referrerPolicy="no-referrer"
-                      onError={() => setHeroImageError(true)}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-stone-900 text-white text-center">
-                      <span className="font-mono text-xs text-[#FF5A00] mb-2">
-                        MÉTHODE MAHFOUD — ÉDITION 2026
-                      </span>
-                      <p className="text-xl font-bold">
-                        Système Complet : 0 DH à 1 000 DH
-                      </p>
-                      <p className="text-xs text-stone-400 mt-1">
-                        6 Modules Pratiques · Français & Darija
-                      </p>
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent p-4 text-white">
-                    <div className="flex items-center justify-between text-xs font-mono tabular-nums">
-                      <span>OBJECTIF : 1 000 DH</span>
-                      <span>PRIX D’ACCÈS : 50 DH</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactive Simulator inside the Hero Showcase */}
-                <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-semibold text-stone-500">
-                        Calculateur rapide (Produit à 50 DH)
-                      </span>
-                      <span className="font-mono text-xs font-bold text-[#FF5A00] tabular-nums">
-                        {targetSalesCount} ventes = {targetSalesCount * 50} DH
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={2}
-                      max={40}
-                      step={2}
-                      value={targetSalesCount}
-                      onChange={(e) => setTargetSalesCount(Number(e.target.value))}
-                      aria-label="Simuler le nombre de ventes à 50 DH"
-                      className="w-full accent-[#FF5A00] cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-600">
-                    <span>
-                      Seulement <strong className="text-stone-900">1 vente</strong> rembourse ta formation (50 DH)
-                    </span>
-                    <span className="font-mono font-semibold text-emerald-700 tabular-nums">
-                      20 ventes = 1000 DH
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-
-        {/* 4. CE QUE TU REÇOIS : 6 MODULES */}
-        <section
-          id="programme"
-          className="py-14 sm:py-20 border-t border-b border-stone-200/80 bg-white"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="max-w-2xl mb-10 sm:mb-12">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#FF5A00] mb-2">
-                <span>Programme Complet</span>
-                <span aria-hidden="true">·</span>
-                <span>6 Modules Actionnables</span>
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-950 mb-3">
-                Ce que tu reçois immédiatement dans la méthode MAHFOUD
-              </h2>
-              <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
-                Pas de théorie inutile. Chaque module te montre exactement quoi
-                faire, étape par étape, en Français clair et en Darija, pour
-                lancer ton produit et encaisser tes premières ventes.
-              </p>
-            </div>
-
-            {/* Asymmetric Bento Grid of the 6 Modules */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-              {MODULES.map((mod) => {
-                const isSelected = mod.id === selectedModuleId;
-                return (
-                  <article
-                    key={mod.id}
-                    onClick={() => setSelectedModuleId(mod.id)}
-                    className={`group cursor-pointer rounded-xl p-6 transition-colors border flex flex-col justify-between ${
-                      mod.featured ? 'md:col-span-2' : 'md:col-span-1'
-                    } ${
-                      isSelected
-                        ? 'bg-[#FAF8F5] border-[#FF5A00]'
-                        : 'bg-[#FAF8F5]/60 border-stone-200/90 hover:border-stone-400'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 text-xs text-stone-500 font-mono tabular-nums mb-3">
-                        <span className="font-bold text-[#FF5A00]">
-                          0{mod.id}. {mod.numberLabel}
-                        </span>
-                        <span>Durée : {mod.duration}</span>
-                      </div>
-
-                      <h3 className="text-lg sm:text-xl font-bold text-stone-950 mb-1.5">
-                        {mod.title}
-                      </h3>
-
-                      <p className="text-xs sm:text-sm font-medium text-stone-700 mb-3">
-                        « {mod.darijaSubtitle} »
-                      </p>
-
-                      <p className="text-sm text-stone-600 leading-relaxed mb-5">
-                        {mod.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-4 border-t border-stone-200/70 flex items-center justify-between gap-4 text-xs">
-                      <span className="text-stone-700 font-medium">
-                        Inclus : {mod.deliverable}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedModuleId(mod.id);
-                        }}
-                        className="font-semibold text-[#FF5A00] hover:underline whitespace-nowrap shrink-0"
-                      >
-                        {isSelected ? 'Détails affichés' : 'Voir le plan'}
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-
-            {/* Interactive Module Detail Bar */}
-            <div className="rounded-xl bg-stone-950 text-white p-6 sm:p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                <div className="lg:col-span-5">
-                  <div className="text-xs font-mono text-[#FF5A00] mb-1">
-                    APERÇU DU CONTENU · MODULE 0{activeModule.id}
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold mb-2">
-                    {activeModule.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                    {activeModule.deliverable}
-                  </p>
-                </div>
-
-                <div className="lg:col-span-7">
-                  <ul className="space-y-2.5">
-                    {activeModule.steps.map((step, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-3 text-xs sm:text-sm text-stone-200"
-                      >
-                        <Check className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-  
-
-        {/* 6. AVIS (Salma de Casablanca, Yassine de Fès, Imane de Rabat) */}
-        <section
-          id="avis"
-          className="py-14 sm:py-20 border-t border-stone-200/80"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 sm:mb-12">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-[#FF5A00] mb-2">
-                  <span>Preuves & Résultats Réels</span>
-                  <span aria-hidden="true">·</span>
-                  <span>Note moyenne ⭐ 4.9/5</span>
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-stone-950">
-                  Ils ont appliqué la méthode MAHFOUD au Maroc
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-stone-600 max-w-md">
-                Retours d’élèves ayant lancé leur premier produit digital avec
-                la méthode étape par étape.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {TESTIMONIALS.map((item) => (
-                <article
-                  key={item.name}
-                  className="bg-white rounded-xl border border-stone-200/90 p-6 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 text-xs font-mono tabular-nums text-stone-500 pb-4 mb-4 border-b border-stone-100">
-                      <span className="font-bold text-emerald-700">
-                        {item.resultMetric}
-                      </span>
-                      <span>{item.timeframe}</span>
-                    </div>
-
-                    <p className="text-sm text-stone-700 leading-relaxed mb-4">
-                      « {item.quoteFr} »
-                    </p>
-
-                    <p className="text-xs sm:text-sm font-medium text-stone-900 bg-[#FAF8F5] p-3 rounded-lg mb-5">
-                      Darija : « {item.quoteDarija} »
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-stone-100">
-                    <div>
-                      <h3 className="text-sm font-bold text-stone-950">
-                        {item.name}
-                      </h3>
-                      <p className="text-xs text-stone-500">
-                        {item.role} · {item.city}
-                      </p>
-                    </div>
-                    <span className="text-xs font-semibold text-stone-800 font-mono">
-                      ⭐ 5.0/5
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* 7. PRIX (499 DH barré, 50 DH, Bouton Vert PAYER PAR CARTE - Via Payhip) */}
-        <section
-          id="prix"
-          className="py-14 sm:py-20 bg-stone-950 text-white border-t border-stone-800"
-        >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="rounded-2xl bg-stone-900 border border-stone-800 p-6 sm:p-10 lg:p-12">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                <div className="lg:col-span-7">
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#FF5A00] mb-3">
-                    <span>Offre Spéciale Lancement</span>
-                    <span aria-hidden="true">·</span>
-                    <span>Accès Complet à Vie</span>
-                  </div>
-
-                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-4">
-                    Passe à l’action aujourd’hui et lance ta première source de
-                    revenus en ligne
-                  </h2>
-
-                  <p className="text-sm text-stone-300 leading-relaxed mb-6">
-                    Tu reçois immédiatement les 6 modules complets, les modèles
-                    de produits, le script de page de vente et la méthode TikTok
-                    pour viser tes premiers 1000 DH.
-                  </p>
-
-                  <ul className="space-y-2.5 text-xs sm:text-sm text-stone-200 mb-6">
-                    <li className="flex items-center gap-2.5">
-                      <Check className="w-4 h-4 text-[#25D366] shrink-0" />
-                      <span>Les 6 modules complets (Français + Darija)</span>
-                    </li>
-                    <li className="flex items-center gap-2.5">
-                      <Check className="w-4 h-4 text-[#25D366] shrink-0" />
-                      <span>Modèles Canva & scripts TikTok prêts à l’emploi</span>
-                    </li>
-                    <li className="flex items-center gap-2.5">
-                      <Check className="w-4 h-4 text-[#25D366] shrink-0" />
-                      <span>Support par email : {CONTACT_EMAIL}</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="lg:col-span-5 bg-stone-950 border border-stone-800 rounded-xl p-6 text-center flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs text-stone-400 mb-2">
-                      Tarif unique — Aucun abonnement mensuel
-                    </p>
-
-                    <div className="flex items-baseline justify-center gap-3 my-4 font-mono tabular-nums">
-                      <span className="text-xl sm:text-2xl text-stone-500 line-through">
-                        499 DH
-                      </span>
-                      <span className="text-4xl sm:text-5xl font-extrabold text-white">
-                        50 DH
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[#FF5A00] font-medium mb-6">
-                      Économise 449 DH (-90% aujourd’hui)
-                    </p>
-                  </div>
-
-                  <div>
-                    <a
-                      href={PAYHIP_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 text-sm sm:text-base font-extrabold text-stone-950 bg-[#25D366] hover:bg-[#20bd5a] rounded-xl transition-transform active:scale-[0.99] whitespace-nowrap shrink-0"
-                    >
-                      <Lock className="w-4 h-4 shrink-0" />
-                      <span>PAYER PAR CARTE - Via Payhip</span>
-                    </a>
-
-                    <div className="mt-4 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-stone-200">
-                      <ShieldCheck className="w-4 h-4 text-[#25D366] shrink-0" />
-                      <span>Accès immédiat - Garantie 7 jours</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 8. FAQ */}
-        <section
-          id="faq"
-          className="py-14 sm:py-20 bg-[#FAF8F5] border-t border-stone-200/80"
-        >
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <div className="mb-10">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#FF5A00] mb-2">
-                <span>Questions Fréquentes</span>
-                <span aria-hidden="true">·</span>
-                <span>Réponses Claires</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-950">
-                Tout savoir avant de commencer
-              </h2>
-            </div>
-
-            <div className="divide-y divide-stone-200 border-t border-b border-stone-200">
-              {FAQ_ITEMS.map((faq, index) => {
-                const isOpen = openFaqIndex === index;
-                return (
-                  <div key={faq.shortTag} className="py-4">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenFaqIndex(isOpen ? -1 : index)
-                      }
-                      aria-expanded={isOpen}
-                      className="w-full flex items-center justify-between gap-4 text-left py-2 focus-visible:outline-2 focus-visible:outline-[#FF5A00]"
-                    >
-                      <span className="text-base sm:text-lg font-bold text-stone-950">
-                        {faq.question}
-                      </span>
-                      <ChevronDown
-                        className={`w-5 h-5 text-stone-500 shrink-0 transition-transform duration-150 ${
-                          isOpen ? 'rotate-180 text-[#FF5A00]' : ''
-                        }`}
-                      />
-                    </button>
-
-                    {isOpen && (
-                      <div className="pt-2 pb-3 space-y-2 text-sm text-stone-700 leading-relaxed">
-                        <p>{faq.answerFr}</p>
-                        <p className="text-xs sm:text-sm font-medium text-stone-900">
-                          Darija : {faq.answerDarija}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* 9. FOOTER */}
-      <footer className="bg-white border-t border-stone-200/90 py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <span className="text-lg font-extrabold tracking-tight text-stone-950">
-              MAHFOUD
-            </span>
-            <p className="text-xs text-stone-500 mt-1">
-              © 2026 MAHFOUD. Tous droits réservés.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-stone-600">
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex items-center gap-1.5 hover:text-stone-950 transition-colors"
-            >
-              <Mail className="w-4 h-4 text-[#FF5A00]" />
-              <span>{CONTACT_EMAIL}</span>
-            </a>
-
-            <span aria-hidden="true" className="text-stone-300">
-              ·
-            </span>
+              <Search className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline">Rechercher...</span>
+            </button>
 
             <button
               type="button"
-              onClick={() => setIsPrivacyOpen(true)}
-              className="font-medium text-stone-700 hover:text-[#FF5A00] underline underline-offset-4 transition-colors cursor-pointer"
+              onClick={() => setDarkMode((prev) => !prev)}
+              aria-label={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
+              title={darkMode ? 'Mode clair (☀️)' : 'Mode sombre (🌙)'}
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer"
             >
-              Politique de Confidentialité
+              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            <span aria-hidden="true" className="text-stone-300">
-              ·
-            </span>
-
-            <a
-              href={PAYHIP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-[#FF5A00] hover:underline whitespace-nowrap"
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label="Menu de navigation mobile"
+              className="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer"
             >
-              Acheter (50 DH)
-            </a>
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
-      </footer>
 
-      {/* 10. PAGE POLITIQUE DE CONFIDENTIALITÉ (Pop-up Modal) */}
-      {isPrivacyOpen && (
+        {/* Menu Mobile Hamburger */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-5 space-y-4 shadow-lg">
+            <div className="grid grid-cols-2 gap-2">
+              {SITE_CONFIG.headerNav.map((item) => (
+                <button
+                  key={item.path}
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                  className="px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                Accès direct aux 15 catégories
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => navigate(cat.url)}
+                    className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
+                  >
+                    {cat.shortName}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* MODALE DE RECHERCHE INTERNE RAPIDE */}
+      {searchModalOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="privacy-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
-          onClick={() => setIsPrivacyOpen(false)}
+          aria-label="Recherche globale TechIA Lab"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-start justify-center p-4 pt-16 sm:pt-24"
+          onClick={() => setSearchModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full p-6 sm:p-8 shadow-xl"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-4 pb-4 mb-4 border-b border-stone-200">
-              <h2
-                id="privacy-modal-title"
-                className="text-lg sm:text-xl font-extrabold text-stone-950"
-              >
-                Politique de Confidentialité
-              </h2>
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+              <Search className="w-5 h-5 text-blue-600 shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher un article, un outil gratuit (PDF, QR Code), une catégorie..."
+                className="w-full bg-transparent text-base sm:text-lg text-slate-900 dark:text-white focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  Effacer
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setIsPrivacyOpen(false)}
-                aria-label="Fermer la fenêtre"
-                className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+                onClick={() => setSearchModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="text-sm text-stone-700 leading-relaxed space-y-4">
-              <p>
-                Politique de Confidentialité - MAHFOUD - Dernière mise à jour :
-                7 Novembre 2026 - Contact : mustaphasoufisme@gmail.com. Ce site
-                utilise Google AdSense pour afficher des publicités. Google, en
-                tant que fournisseur tiers, utilise des cookies pour diffuser
-                des annonces sur ce site. L'utilisation du cookie DART par
-                Google lui permet de diffuser des annonces aux utilisateurs en
-                fonction de leur visite sur ce site et sur d'autres sites
-                Internet. Les utilisateurs peuvent désactiver l'utilisation du
-                cookie DART sur{' '}
-                <a
-                  href="https://policies.google.com/technologies/ads"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#FF5A00] underline break-all"
+            <div className="mt-5 space-y-6">
+              {/* Outils correspondants */}
+              {searchResults.tools.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                    Outils Gratuits ({searchResults.tools.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {searchResults.tools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => navigate(tool.url)}
+                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 text-left flex items-center justify-between gap-3 cursor-pointer"
+                      >
+                        <div>
+                          <div className="text-sm font-bold text-slate-900 dark:text-white">
+                            {tool.shortName}
+                          </div>
+                          <div className="text-xs text-slate-500 line-clamp-1">{tool.summary}</div>
+                        </div>
+                        <Wrench className="w-4 h-4 text-blue-600 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Articles correspondants */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                  Articles & Guides ({searchResults.articles.length})
+                </h4>
+                {searchResults.articles.length === 0 ? (
+                  <p className="text-sm text-slate-500 py-4">
+                    Aucun article trouvé pour « {searchQuery} ».
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {searchResults.articles.map((art) => (
+                      <div
+                        key={art.id}
+                        onClick={() => navigate(art.url)}
+                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 flex items-center gap-4 cursor-pointer"
+                      >
+                        <SafeImage
+                          src={art.image}
+                          alt={art.imageAlt}
+                          className="w-20 h-14 rounded-lg object-cover shrink-0 hidden sm:block"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mb-0.5">
+                            <span className="font-semibold text-blue-600 dark:text-blue-400">
+                              {art.categoryName}
+                            </span>
+                            <span>·</span>
+                            <span>{art.date}</span>
+                          </div>
+                          <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {art.title}
+                          </div>
+                          <div className="text-xs text-slate-500 line-clamp-1">{art.excerpt}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Catégories correspondantes */}
+              {searchResults.categories.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                    Catégories ({searchResults.categories.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {searchResults.categories.map((c) => (
+                      <button
+                        key={c.slug}
+                        type="button"
+                        onClick={() => navigate(c.url)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONTENU PRINCIPAL SELON LA ROUTE */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6">
+        {/* ====================================================================
+            ROUTE 1 : PAGE D'ACCUEIL (/)
+           ==================================================================== */}
+        {route.type === 'home' && (
+          <>
+            <SeoHead
+              title={`${SITE_CONFIG.name} — ${SITE_CONFIG.slogan}`}
+              description={SITE_CONFIG.positioning}
+              path="/"
+              breadcrumbs={[{ name: 'Accueil', path: '/' }]}
+            />
+
+            {/* 1. HERO SECTION */}
+            <section className="py-10 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+                <div className="lg:col-span-7 flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">
+                      <span className="font-bold text-blue-600 dark:text-blue-400">
+                        Portail Francophone {SITE_CONFIG.name}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>15 Catégories Spécialisées</span>
+                      <span aria-hidden="true">·</span>
+                      <span>9 Outils Gratuits en Ligne</span>
+                    </div>
+
+                    <h1
+                      className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08] mb-5"
+                      style={{ fontSize: 'clamp(2.25rem, 4vw, 3.5rem)' }}
+                    >
+                      {SITE_CONFIG.hero.title}
+                    </h1>
+
+                    <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mb-4">
+                      {SITE_CONFIG.hero.subtitle}
+                    </p>
+
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mb-8">
+                      {SITE_CONFIG.positioning}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/guides/')}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span>{SITE_CONFIG.hero.primaryCta}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/outils/')}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>{SITE_CONFIG.hero.secondaryCta}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 p-6 sm:p-7 flex flex-col justify-between text-white">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 text-xs font-mono text-blue-400 mb-3">
+                      <span>DOSSIER PHARE · {ARTICLES[0].categoryName.toUpperCase()}</span>
+                      <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">GUIDE COMPLET</span>
+                    </div>
+                    <h2
+                      onClick={() => navigate(ARTICLES[0].url)}
+                      className="text-lg sm:text-xl font-bold leading-snug hover:text-blue-400 transition-colors cursor-pointer mb-3"
+                    >
+                      {ARTICLES[0].title}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 line-clamp-3">
+                      {ARTICLES[0].excerpt}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2.5 mb-5">
+                      {[
+                        { label: 'Pôle IA & LLM', sub: 'ChatGPT, Gemini, Prompts', path: '/ia/' },
+                        { label: 'Programmation', sub: 'Python, PHP 8, JS/TS', path: '/programmation/' },
+                        { label: '9 Outils Gratuits', sub: 'PDF, QR Code, Calculs', path: '/outils/' },
+                        { label: 'Édition & KDP', sub: 'Canva, Kindle, Broché', path: '/kdp/' },
+                      ].map((pillar) => (
+                        <button
+                          key={pillar.path}
+                          type="button"
+                          onClick={() => navigate(pillar.path)}
+                          className="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 text-left transition-colors cursor-pointer"
+                        >
+                          <div className="text-xs font-bold text-white">{pillar.label}</div>
+                          <div className="text-[11px] text-slate-400 truncate mt-0.5">{pillar.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
+                    <span>{ARTICLES[0].readTime} de lecture</span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(ARTICLES[0].url)}
+                      className="font-bold text-blue-400 hover:underline cursor-pointer"
+                    >
+                      Consulter le dossier →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 2. SECTION "À LA UNE" (4 Dossiers Principaux - Images 100% Uniques) */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                    Sélection Éditoriale
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    À la Une
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/guides/')}
+                  className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
-                  https://policies.google.com/technologies/ads
-                </a>{' '}
-                Les paiements sont gérés de manière sécurisée par Payhip. Nous
-                ne recevons, ne stockons et ne voyons jamais vos informations
-                bancaires. Vous avez le droit de demander la suppression de vos
-                données à{' '}
-                <a
-                  href="mailto:mustaphasoufisme@gmail.com"
-                  className="text-[#FF5A00] underline"
+                  <span>Voir tous les guides</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[ARTICLES[0], ARTICLES[1], ARTICLES[5], ARTICLES[6]].map((article) => (
+                  <ArticleCard key={article.id} article={article} onNavigate={navigate} />
+                ))}
+              </div>
+            </section>
+
+            {/* 3. SECTION "INTELLIGENCE ARTIFICIELLE" (3 Articles IA Dédiés sans doublon) */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Pôle Intelligence Artificielle</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Intelligence Artificielle : ChatGPT, Gemini & Automatisation
+                  </h2>
+                </div>
+
+                {/* Piliers IA cliquables */}
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'ChatGPT', path: '/chatgpt/' },
+                    { label: 'Google AI / Gemini', path: '/google-ai-gemini/' },
+                    { label: 'Génération d’images & Design', path: '/canva-creation/' },
+                    { label: 'Automatisation IA', path: '/automatisation/' },
+                    { label: 'Outils IA', path: '/ia/' },
+                  ].map((pill) => (
+                    <button
+                      key={pill.path}
+                      type="button"
+                      onClick={() => navigate(pill.path)}
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-blue-600 hover:text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      {pill.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[ARTICLES[4], ARTICLES[7], ARTICLES[9]].map((art) => (
+                  <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                ))}
+              </div>
+            </section>
+
+            {/* 4. SECTION "PROGRAMMATION" (3 Articles Programmation Dédiés sans doublon) */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                    <Code2 className="w-4 h-4" />
+                    <span>Développement & Ingénierie Logicielle</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Programmation : Python, PHP, JavaScript & Web
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'Python', path: '/python/' },
+                    { label: 'PHP', path: '/php/' },
+                    { label: 'JavaScript', path: '/javascript/' },
+                    { label: 'Développement Web', path: '/creation-sites-web/' },
+                    { label: 'Applications', path: '/applications-android/' },
+                  ].map((item) => (
+                    <button
+                      key={item.path}
+                      type="button"
+                      onClick={() => navigate(item.path)}
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-emerald-600 hover:text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[ARTICLES[2], ARTICLES[3], ARTICLES[8]].map((art) => (
+                  <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                ))}
+              </div>
+            </section>
+
+            {/* 5. SECTION "OUTILS GRATUITS" (Les 9 Outils Numériques) */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                    <Wrench className="w-4 h-4" />
+                    <span>Utilitaires Web 100 % Locaux & Gratuits</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Outils Numériques Gratuits en Ligne
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/outils/')}
+                  className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
-                  mustaphasoufisme@gmail.com
-                </a>
-                .
+                  <span>Accéder à tous les outils</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {TOOLS.map((tool) => (
+                  <div
+                    key={tool.id}
+                    onClick={() => navigate(tool.url)}
+                    className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 transition-colors cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3">
+                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                          {tool.category}
+                        </span>
+                        <span className="font-mono text-[11px]">{tool.url}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+                        {tool.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                        {tool.summary}
+                      </p>
+                    </div>
+                    <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                      <span>Utiliser l’outil gratuitement</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 6. SECTION "GUIDES COMPLETS" */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="mb-8">
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                  Dossiers Pas à Pas de A à Z
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  Guides Complets pour Créer vos Projets
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  {
+                    title: 'Créer une application web de A à Z',
+                    desc: 'Architecture frontend/backend, typage TypeScript, sécurité des clés API et mise en production.',
+                    path: '/article/comment-creer-une-application-web-avec-l-intelligence-artificielle',
+                    tag: 'Application Web',
+                  },
+                  {
+                    title: 'Créer une application Android & Mobile',
+                    desc: 'Concevoir une interface mobile fluide, installer une Progressive Web App (PWA) et structurer son projet.',
+                    path: '/applications-android/',
+                    tag: 'Android & Mobile',
+                  },
+                  {
+                    title: 'Créer un livre Kindle et Broché sur Amazon KDP',
+                    desc: 'Formats en pouces/cm, calcul de la tranche, marges avec fond perdu dans Canva et redevances.',
+                    path: '/article/comment-creer-un-livre-kindle-avec-canva',
+                    tag: 'Kindle & KDP',
+                  },
+                  {
+                    title: 'Créer un site web professionnel avec l’IA',
+                    desc: 'Structure HTML5 sémantique, Core Web Vitals, SEO technique et compatibilité Google AdSense.',
+                    path: '/article/comment-creer-un-site-web-avec-l-ia',
+                    tag: 'Site Web & SEO',
+                  },
+                ].map((guide) => (
+                  <div
+                    key={guide.title}
+                    onClick={() => navigate(guide.path)}
+                    className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 transition-colors cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                        {guide.tag}
+                      </div>
+                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">
+                        {guide.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5">
+                        {guide.desc}
+                      </p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
+                      <span>Consulter le guide complet</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 7. RÉPERTOIRE DES 15 CATÉGORIES PRINCIPALES */}
+            <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
+              <div className="mb-8">
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
+                  Exploration Thématique
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  Les 15 Catégories du Portail {SITE_CONFIG.name}
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() => navigate(cat.url)}
+                    className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-left transition-colors cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400">
+                        {cat.id < 10 ? `0${cat.id}` : cat.id}. {cat.group}
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1 mb-1.5">
+                        {cat.name}
+                      </h3>
+                    </div>
+                    <span className="text-[11px] text-slate-500 line-clamp-2">
+                      {cat.seoDescription}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* 8. NEWSLETTER */}
+            <section className="py-12 sm:py-16">
+              <NewsletterBox />
+            </section>
+          </>
+        )}
+
+        {/* ====================================================================
+            ROUTE 2 : PAGE CATÉGORIE (/ia/, /python/, /kdp/, etc.) OU /guides/
+           ==================================================================== */}
+        {(route.type === 'category-detail' || route.type === 'guides-hub') && (() => {
+          const isGuidesHub = route.type === 'guides-hub';
+          const cat: CategoryInfo = isGuidesHub
+            ? {
+                id: 0,
+                slug: 'guides',
+                url: '/guides/',
+                name: 'Guides Complets de A à Z',
+                shortName: 'Guides Complets',
+                group: 'Guides',
+                seoTitle: 'Guides Complets : IA, Applications Web, Python et KDP | TechIA Lab',
+                seoDescription:
+                  'Tous nos dossiers complets étape par étape pour créer une application web, maîtriser Python, publier un livre KDP et automatiser vos projets.',
+                longDescription:
+                  'Retrouvez ici l’ensemble de nos grands dossiers méthodologiques structurés avec exemples de code, tableaux comparatifs et feuilles de route.',
+                image: ARTICLES[0].image,
+                topics: ['Application Web A à Z', 'Python Complet', 'Amazon KDP', 'Site Web IA'],
+              }
+            : route.category;
+
+          const allCatArticles = getArticlesForCategory(cat.slug);
+          const displayArticles = allCatArticles.length > 0 ? allCatArticles : ARTICLES;
+          const itemsPerPage = 4;
+          const totalPages = Math.max(1, Math.ceil(displayArticles.length / itemsPerPage));
+          const safePage = Math.min(categoryPageIndex, totalPages);
+          const paginatedArticles = displayArticles.slice(
+            (safePage - 1) * itemsPerPage,
+            safePage * itemsPerPage
+          );
+
+          return (
+            <div className="py-8 sm:py-12">
+              <SeoHead
+                title={cat.seoTitle}
+                description={cat.seoDescription}
+                path={cat.url}
+                image={cat.image}
+                breadcrumbs={[
+                  { name: 'Accueil', path: '/' },
+                  { name: cat.name, path: cat.url },
+                ]}
+              />
+
+              {/* Fil d'Ariane */}
+              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 mb-6 flex items-center gap-2">
+                <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
+                  Accueil
+                </button>
+                <span>/</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{cat.name}</span>
+              </nav>
+
+              {/* En-tête Catégorie avec Fiche Thématique */}
+              <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-10">
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                    <Layers className="w-4 h-4" />
+                    <span>Dossier Thématique · {cat.group}</span>
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    {cat.name}
+                  </h1>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {cat.longDescription}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 pt-2">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">Sujets couverts :</span>
+                    {cat.topics.map((t, idx) => (
+                      <React.Fragment key={t}>
+                        <span>{t}</span>
+                        {idx < cat.topics.length - 1 && <span aria-hidden="true">·</span>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+                <div className="lg:col-span-5 rounded-xl p-5 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                      Repères du Dossier
+                    </span>
+                    <span className="text-xs font-mono text-slate-500 tabular-nums">
+                      {displayArticles.length} guides disponibles
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {cat.topics.slice(0, 4).map((topic) => (
+                      <div
+                        key={topic}
+                        className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"
+                      >
+                        {topic}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Outils interactifs associés</span>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/outils/')}
+                      className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                    >
+                      Ouvrir les outils →
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              {/* Contenu principal + Sidebar */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="lg:col-span-8 space-y-8">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                      Articles & Tutoriels ({displayArticles.length})
+                    </h2>
+                    <span className="text-xs font-mono text-slate-500 tabular-nums">
+                      Page {safePage} sur {totalPages}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {paginatedArticles.map((art) => (
+                      <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4">
+                      <button
+                        type="button"
+                        disabled={safePage <= 1}
+                        onClick={() => setCategoryPageIndex((p) => Math.max(1, p - 1))}
+                        className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span>Précédent</span>
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => setCategoryPageIndex(pageNum)}
+                          className={`w-9 h-9 rounded-lg text-xs font-mono font-bold cursor-pointer ${
+                            pageNum === safePage
+                              ? 'bg-blue-600 text-white'
+                              : 'border border-slate-300 dark:border-slate-700'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        disabled={safePage >= totalPages}
+                        onClick={() => setCategoryPageIndex((p) => Math.min(totalPages, p + 1))}
+                        className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Suivant</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="lg:col-span-4">{renderSidebar()}</div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ====================================================================
+            ROUTE 3 : MODÈLE DE PAGE ARTICLE (/article/:slug)
+           ==================================================================== */}
+        {route.type === 'article-detail' && (() => {
+          const { article } = route;
+          const similarArticles = ARTICLES.filter((a) => a.id !== article.id).slice(0, 3);
+
+          return (
+            <div className="py-8 sm:py-12">
+              <SeoHead
+                title={article.seoTitle}
+                description={article.metaDescription}
+                path={article.url}
+                type="article"
+                image={article.image}
+                articleData={{
+                  author: article.author,
+                  datePublished: article.date,
+                  dateModified: article.updatedDate,
+                  category: article.categoryName,
+                }}
+                breadcrumbs={[
+                  { name: 'Accueil', path: '/' },
+                  { name: article.categoryName, path: `/${article.categorySlug}/` },
+                  { name: article.title, path: article.url },
+                ]}
+                faq={article.faq}
+              />
+
+              {/* Fil d'Ariane */}
+              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 mb-6 flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
+                  Accueil
+                </button>
+                <span>/</span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/${article.categorySlug}/`)}
+                  className="hover:text-blue-600 cursor-pointer"
+                >
+                  {article.categoryName}
+                </button>
+                <span>/</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-xs sm:max-w-md">
+                  {article.title}
+                </span>
+              </nav>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Colonne Principale de l'Article */}
+                <article className="lg:col-span-8 space-y-8">
+                  <header className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/${article.categorySlug}/`)}
+                        className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      >
+                        {article.categoryName}
+                      </button>
+                      <span aria-hidden="true">·</span>
+                      <span>Par {article.author}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>Publié le {article.date}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="inline-flex items-center gap-1 font-mono tabular-nums">
+                        <Clock className="w-3.5 h-3.5" />
+                        {article.readTime}
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
+                      {article.title}
+                    </h1>
+                  </header>
+
+                  {/* Image Principale */}
+                  <div className="aspect-16/9 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
+                    <SafeImage
+                      src={article.image}
+                      alt={article.imageAlt}
+                      eager
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Introduction */}
+                  <div className="space-y-4 text-base sm:text-lg text-slate-700 dark:text-slate-200 leading-relaxed max-w-prose">
+                    {article.introduction.map((para, idx) => (
+                      <p key={idx}>{para}</p>
+                    ))}
+                  </div>
+
+                  {/* Table des matières automatique (TOC) */}
+                  <nav
+                    aria-label="Sommaire de l'article"
+                    className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                  >
+                    <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white mb-3">
+                      <List className="w-4 h-4 text-blue-600" />
+                      <span>Sommaire de l’article</span>
+                    </div>
+                    <ol className="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+                      {article.sections.map((sec) => (
+                        <li key={sec.id}>
+                          <a
+                            href={`#${sec.id}`}
+                            className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+                          >
+                            {sec.h2}
+                          </a>
+                        </li>
+                      ))}
+                      <li>
+                        <a
+                          href="#conclusion-article"
+                          className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+                        >
+                          Conclusion & Points clés à retenir
+                        </a>
+                      </li>
+                    </ol>
+                  </nav>
+
+                  {/* Corps de l'article : Sections H2 / H3, Exemples, Code, Tableaux */}
+                  <div className="space-y-10">
+                    {article.sections.map((sec) => (
+                      <section key={sec.id} id={sec.id} className="space-y-4 scroll-mt-24">
+                        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                          {sec.h2}
+                        </h2>
+                        {sec.h3 && (
+                          <h3 className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                            {sec.h3}
+                          </h3>
+                        )}
+                        <div className="space-y-4 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed max-w-prose">
+                          {sec.paragraphs.map((p, i) => (
+                            <p key={i}>{p}</p>
+                          ))}
+                        </div>
+
+                        {/* Encadré d'exemple pratique */}
+                        {sec.exampleBox && (
+                          <div className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                              {sec.exampleBox.title}
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line font-mono leading-relaxed">
+                              {sec.exampleBox.content}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Bloc de code avec copie en 1 clic */}
+                        {sec.codeBlock && (
+                          <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100">
+                            <div className="px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 text-xs">
+                              <span className="font-mono text-slate-300 truncate">
+                                {sec.codeBlock.title} ({sec.codeBlock.language})
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyCode(sec.id, sec.codeBlock!.code)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold cursor-pointer shrink-0"
+                              >
+                                {copiedCodeId === sec.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>Copié</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>Copier le code</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <pre className="p-4 text-xs sm:text-sm font-mono overflow-x-auto leading-relaxed">
+                              <code>{sec.codeBlock.code}</code>
+                            </pre>
+                          </div>
+                        )}
+
+                        {/* Tableau comparatif */}
+                        {sec.table && (
+                          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                              <caption className="p-3 text-left text-xs font-semibold text-slate-500 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                                {sec.table.caption}
+                              </caption>
+                              <thead>
+                                <tr className="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white">
+                                  {sec.table.headers.map((h) => (
+                                    <th
+                                      key={h}
+                                      className="p-3.5 font-bold border-b border-slate-200 dark:border-slate-800"
+                                    >
+                                      {h}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                                {sec.table.rows.map((row, rIdx) => (
+                                  <tr
+                                    key={rIdx}
+                                    className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50"
+                                  >
+                                    {row.map((cell, cIdx) => (
+                                      <td
+                                        key={cIdx}
+                                        className={`p-3.5 align-top ${
+                                          cIdx === 0 ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'
+                                        }`}
+                                      >
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </section>
+                    ))}
+                  </div>
+
+                  {/* Bloc Affiliation / Recommandation d'outils */}
+                  {article.recommendations && (
+                    <section className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                            Notre recommandation
+                          </span>
+                          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
+                            {article.recommendations.title}
+                          </h3>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/outils/')}
+                          className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
+                        >
+                          Comparer les solutions
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {article.recommendations.items.map((rec) => (
+                          <div
+                            key={rec.name}
+                            className="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-3"
+                          >
+                            <div>
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                                {rec.name}
+                              </h4>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                {rec.purpose}
+                              </p>
+                              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5">
+                                Point fort : {rec.strengths}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => navigate(rec.url)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold w-fit cursor-pointer"
+                            >
+                              <span>Voir l’outil</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Conclusion */}
+                  <section
+                    id="conclusion-article"
+                    className="p-6 rounded-2xl bg-slate-900 text-white space-y-3 scroll-mt-24"
+                  >
+                    <h2 className="text-lg sm:text-xl font-bold">Conclusion</h2>
+                    {article.conclusion.map((c, idx) => (
+                      <p key={idx} className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                        {c}
+                      </p>
+                    ))}
+                  </section>
+
+                  {/* FAQ éventuelle (avec Schema.org FAQPage automatique) */}
+                  {article.faq && article.faq.length > 0 && (
+                    <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                      <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                        Questions fréquentes sur ce sujet
+                      </h2>
+                      <div className="space-y-3">
+                        {article.faq.map((f, i) => (
+                          <div
+                            key={i}
+                            className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                          >
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1.5">
+                              {f.question}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                              {f.answer}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Boutons de partage */}
+                  <div className="py-5 border-t border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+                    <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-blue-600" />
+                      <span>Partager ce tutoriel :</span>
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleShareCopy}
+                        className="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{shareCopied ? 'Lien copié !' : 'Copier le lien'}</span>
+                      </button>
+                      <a
+                        href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(
+                          `${article.title} — ${SITE_CONFIG.siteUrl}${article.url}`
+                        )}`}
+                        className="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-xs font-semibold"
+                      >
+                        Partager par Email
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Articles similaires */}
+                  <section className="pt-4">
+                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-5">
+                      Articles similaires à découvrir
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {similarArticles.map((sim) => (
+                        <ArticleCard key={sim.id} article={sim} onNavigate={navigate} />
+                      ))}
+                    </div>
+                  </section>
+                </article>
+
+                {/* Sidebar sur ordinateur (passe sous le contenu sur mobile) */}
+                <div className="lg:col-span-4">{renderSidebar()}</div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ====================================================================
+            ROUTE 4 : HUB DES OUTILS GRATUITS (/outils/)
+           ==================================================================== */}
+        {route.type === 'tools-hub' && (
+          <div className="py-8 sm:py-12 space-y-10">
+            <SeoHead
+              title={`Outils Numériques Gratuits en Ligne (PDF, QR Code, Texte, Dev) | ${SITE_CONFIG.name}`}
+              description="Utilisez gratuitement nos 9 outils numériques en ligne : convertisseur PDF vers images, images vers PDF, fusionner/compresser PDF, QR Code, compteur de mots et calculateurs."
+              path="/outils/"
+              breadcrumbs={[
+                { name: 'Accueil', path: '/' },
+                { name: 'Outils Gratuits', path: '/outils/' },
+              ]}
+            />
+
+            <header className="max-w-3xl">
+              <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                Boîte à Outils {SITE_CONFIG.name}
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+                Outils Gratuits en Ligne
+              </h1>
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+                Tous nos utilitaires fonctionnent directement dans votre navigateur,
+                sans inscription obligatoire et dans le respect total de la
+                confidentialité de vos documents.
               </p>
-            </div>
+            </header>
 
-            <div className="mt-6 pt-4 border-t border-stone-200 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setIsPrivacyOpen(false)}
-                className="px-5 py-2.5 text-xs sm:text-sm font-bold text-white bg-stone-900 hover:bg-stone-800 rounded-lg transition-colors"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 11. BANNIÈRE COOKIES */}
-      {!cookiesAccepted && (
-        <div
-          role="region"
-          aria-label="Bannière cookies"
-          className="fixed bottom-0 inset-x-0 z-40 bg-stone-950/95 text-white border-t border-stone-800 px-4 py-2.5"
-        >
-          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-            <p className="text-stone-200 text-center sm:text-left">
-              Ce site utilise des cookies Google AdSense pour améliorer votre
-              expérience.
-            </p>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsPrivacyOpen(true)}
-                className="text-xs text-stone-400 hover:text-white underline whitespace-nowrap"
-              >
-                En savoir plus
-              </button>
-              <button
-                type="button"
-                onClick={handleAcceptCookies}
-                className="px-4 py-1.5 text-xs font-bold text-white bg-[#FF5A00] hover:bg-[#E04F00] rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                J'accepte
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* BOUTON WHATSAPP FLOTTANT */}
-      <div
-        className={`fixed right-4 z-40 ${
-          cookiesAccepted ? 'bottom-4' : 'bottom-16 sm:bottom-14'
-        }`}
-      >
-        {whatsAppDrawerOpen && (
-          <div className="mb-3 w-72 sm:w-80 bg-white rounded-2xl border border-stone-200 shadow-xl p-4 text-stone-900">
-            <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100">
-              <span className="text-xs font-bold text-stone-950">
-                Support Rapide MAHFOUD
-              </span>
-              <button
-                type="button"
-                onClick={() => setWhatsAppDrawerOpen(false)}
-                aria-label="Fermer l'aide"
-                className="text-stone-400 hover:text-stone-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="text-xs text-stone-600 leading-relaxed mb-3">
-              Salam ! Tu as une question sur la formation à 50 DH ou le paiement
-              Payhip ?
-            </p>
-            <div className="space-y-2">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(
-                  'Salam MAHFOUD, je veux commencer la formation à 50 DH : https://payhip.com/b/8cbQk'
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-stone-950 bg-[#25D366] hover:bg-[#20bd5a] rounded-lg transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Ouvrir WhatsApp</span>
-              </a>
-              <a
-                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-                  'Question Formation MAHFOUD - 50 DH'
-                )}`}
-                className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                <span>Écrire à {CONTACT_EMAIL}</span>
-              </a>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {TOOLS.map((tool) => (
+                <article
+                  key={tool.id}
+                  onClick={() => navigate(tool.url)}
+                  className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 transition-colors cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+                      <span className="font-bold text-blue-600 dark:text-blue-400">
+                        {tool.category}
+                      </span>
+                      <span className="font-mono">{tool.url}</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                      {tool.name}
+                    </h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                      {tool.summary}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                    <span>Ouvrir l’outil</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => setWhatsAppDrawerOpen((prev) => !prev)}
-          aria-label="Support WhatsApp"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-stone-950 font-bold text-xs sm:text-sm shadow-md transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
+        {/* ====================================================================
+            ROUTE 5 : PAGE SEO D'UN OUTIL GRATUIT (/outils/:slug/)
+           ==================================================================== */}
+        {route.type === 'tool-detail' && (() => {
+          const { tool } = route;
+          return (
+            <div className="py-8 sm:py-12 space-y-10">
+              <SeoHead
+                title={tool.seoTitle}
+                description={tool.seoDescription}
+                path={tool.url}
+                type="software"
+                breadcrumbs={[
+                  { name: 'Accueil', path: '/' },
+                  { name: 'Outils Gratuits', path: '/outils/' },
+                  { name: tool.shortName, path: tool.url },
+                ]}
+                faq={tool.faq}
+              />
+
+              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 flex items-center gap-2">
+                <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
+                  Accueil
+                </button>
+                <span>/</span>
+                <button type="button" onClick={() => navigate('/outils/')} className="hover:text-blue-600 cursor-pointer">
+                  Outils Gratuits
+                </button>
+                <span>/</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{tool.shortName}</span>
+              </nav>
+
+              <header className="max-w-3xl">
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1.5">
+                  Outil Gratuit · {tool.category}
+                </div>
+                <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">
+                  {tool.name}
+                </h1>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {tool.summary}
+                </p>
+              </header>
+
+              {/* Espace Interactif de l'Outil */}
+              <section className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <InteractiveToolWidget toolSlug={tool.slug} />
+              </section>
+
+              {/* Guide d'utilisation SEO & FAQ de l'outil */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+                <div className="lg:col-span-7 space-y-6">
+                  <section className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                      Comment utiliser cet outil étape par étape ?
+                    </h2>
+                    <ol className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                      {tool.howToSteps.map((step, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                            0{idx + 1}.
+                          </span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+
+                  {tool.faq.length > 0 && (
+                    <section className="space-y-3">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                        Questions fréquentes
+                      </h2>
+                      {tool.faq.map((f, i) => (
+                        <div
+                          key={i}
+                          className="p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
+                        >
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+                            {f.question}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {f.answer}
+                          </p>
+                        </div>
+                      ))}
+                    </section>
+                  )}
+                </div>
+
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
+                      Autres outils gratuits {SITE_CONFIG.name}
+                    </h3>
+                    <div className="space-y-2">
+                      {TOOLS.filter((t) => t.slug !== tool.slug).map((other) => (
+                        <button
+                          key={other.id}
+                          type="button"
+                          onClick={() => navigate(other.url)}
+                          className="w-full p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-left flex items-center justify-between text-xs sm:text-sm font-semibold cursor-pointer"
+                        >
+                          <span>{other.name}</span>
+                          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ====================================================================
+            ROUTE 6 : PAGES STATIQUES (/a-propos/, /contact/, pages légales)
+           ==================================================================== */}
+        {route.type === 'about' && (
+          <>
+            <SeoHead
+              title={`À Propos de ${SITE_CONFIG.name} — Objectif, Philosophie et Équipe`}
+              description={`Découvrez la mission éditoriale de ${SITE_CONFIG.name} : tutoriels d'intelligence artificielle, programmation et outils numériques gratuits.`}
+              path="/a-propos/"
+              breadcrumbs={[
+                { name: 'Accueil', path: '/' },
+                { name: 'À Propos', path: '/a-propos/' },
+              ]}
+            />
+            <AboutPage onNavigate={navigate} />
+          </>
+        )}
+
+        {route.type === 'contact' && (
+          <>
+            <SeoHead
+              title={`Contactez ${SITE_CONFIG.name} — Formulaire et Support`}
+              description={`Contactez la rédaction de ${SITE_CONFIG.name} pour toute question technique, suggestion de guide ou signalement.`}
+              path="/contact/"
+              breadcrumbs={[
+                { name: 'Accueil', path: '/' },
+                { name: 'Contact', path: '/contact/' },
+              ]}
+            />
+            <ContactPage />
+          </>
+        )}
+
+        {route.type === 'legal' && (
+          <>
+            <SeoHead
+              title={
+                route.subtype === 'confidentialite'
+                  ? `Politique de Confidentialité & Cookies AdSense | ${SITE_CONFIG.name}`
+                  : route.subtype === 'mentions-legales'
+                  ? `Mentions Légales | ${SITE_CONFIG.name}`
+                  : `Conditions Générales d'Utilisation | ${SITE_CONFIG.name}`
+              }
+              description={`Informations légales et politique de confidentialité du portail ${SITE_CONFIG.name}.`}
+              path={`/${route.subtype}/`}
+            />
+            <LegalPage type={route.subtype} />
+          </>
+        )}
+      </main>
+
+      {/* PIED DE PAGE (FOOTER) */}
+      <footer className="bg-black text-white border-t border-slate-900 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-b border-neutral-900">
+          <div className="space-y-3">
+            <div className="text-lg font-extrabold tracking-tight text-white">
+              {SITE_CONFIG.name}
+            </div>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              {SITE_CONFIG.slogan} {SITE_CONFIG.positioning}
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+              Pôles Thématiques
+            </h3>
+            <ul className="space-y-2 text-xs text-neutral-300">
+              <li>
+                <button type="button" onClick={() => navigate('/ia/')} className="hover:text-white cursor-pointer">
+                  Intelligence artificielle
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/chatgpt/')} className="hover:text-white cursor-pointer">
+                  ChatGPT & Google Gemini
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/python/')} className="hover:text-white cursor-pointer">
+                  Programmation Python & JS
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/kdp/')} className="hover:text-white cursor-pointer">
+                  Kindle & Amazon KDP
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/automatisation/')} className="hover:text-white cursor-pointer">
+                  Automatisation & Freelance
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+              Outils Gratuits Populaires
+            </h3>
+            <ul className="space-y-2 text-xs text-neutral-300">
+              <li>
+                <button type="button" onClick={() => navigate('/outils/pdf-vers-images/')} className="hover:text-white cursor-pointer">
+                  PDF vers Images (PNG/WebP)
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/outils/fusionner-pdf/')} className="hover:text-white cursor-pointer">
+                  Fusionner & Compresser PDF
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/outils/qr-code/')} className="hover:text-white cursor-pointer">
+                  Générateur de QR Code
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/outils/compteur-de-mots/')} className="hover:text-white cursor-pointer">
+                  Compteur de Mots SEO
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/outils/calculateur/')} className="hover:text-white cursor-pointer">
+                  Calculateur TJM & KDP
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+              Informations & Conformité
+            </h3>
+            <ul className="space-y-2 text-xs text-neutral-300">
+              <li>
+                <button type="button" onClick={() => navigate('/a-propos/')} className="hover:text-white cursor-pointer">
+                  À propos
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/contact/')} className="hover:text-white cursor-pointer">
+                  Contact ({SITE_CONFIG.contactEmail})
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/confidentialite/')} className="hover:text-white cursor-pointer">
+                  Politique de confidentialité
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/mentions-legales/')} className="hover:text-white cursor-pointer">
+                  Mentions légales
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/conditions-utilisation/')} className="hover:text-white cursor-pointer">
+                  Conditions d’utilisation
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-6 text-center">
+          <p className="text-xs text-neutral-400 tracking-wide">
+            © 2026 Mahfoud - Tous droits réservés | {SITE_CONFIG.name}
+          </p>
+        </div>
+      </footer>
+
+      {/* BANNIÈRE DE CONSENTEMENT COOKIES GOOGLE ADSENSE */}
+      {!cookiesAccepted && (
+        <div
+          role="region"
+          aria-label="Consentement aux cookies"
+          className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 text-white border-t border-slate-800 px-4 py-3"
         >
-          <MessageCircle className="w-4 h-4 shrink-0" />
-          <span>WhatsApp</span>
-        </button>
-      </div>
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <p className="text-slate-300 text-center sm:text-left">
+              Ce site utilise Google AdSense Auto Ads et des cookies pour mesurer
+              l’audience et améliorer votre expérience de navigation.
+            </p>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => navigate('/confidentialite/')}
+                className="text-slate-400 hover:text-white underline cursor-pointer"
+              >
+                Politique de confidentialité
+              </button>
+              <button
+                type="button"
+                onClick={handleAcceptCookies}
+                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer"
+              >
+                J’accepte
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

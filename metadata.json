@@ -1,6 +1,6 @@
 {
-  "name": "MAHFOUD — Gagne tes premiers 1000 DH sur internet",
-  "description": "La méthode MAHFOUD étape par étape pour gagner tes premiers 1000 DH sur internet, même si tu pars de zéro. Formation complète en Français et Darija.",
+  "name": "Actu Foot Maroc — Actualités du Football Marocain et International",
+  "description": "Toute l'actualité du football marocain : Botola Pro, Lions de l'Atlas, Ligue des Champions, Mercato et préparatifs de la Coupe du Monde 2030 au Maroc.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

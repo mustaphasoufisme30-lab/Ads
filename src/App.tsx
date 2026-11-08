@@ -18,7 +18,6 @@ import {
   ExternalLink,
   Layers,
   List,
-  Menu,
   Moon,
   Search,
   Share2,
@@ -34,6 +33,7 @@ import { TOOLS, getToolBySlug } from './data/tools';
 import { SeoHead } from './components/SeoHead';
 import { InteractiveToolWidget } from './components/InteractiveTools';
 import { AboutPage, ContactPage, LegalPage } from './components/StaticPages';
+import { useLocale, useTranslations } from './i18n/next-intl';
 
 // Resilient image component with fallback and explicit dimensions
 const SafeImage: React.FC<{
@@ -240,6 +240,10 @@ const ArticleCard: React.FC<{
 };
 
 export default function App() {
+  const { locale, setLocale } = useLocale();
+  const tNav = useTranslations('nav');
+  const tTitles = useTranslations('titles');
+
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return window.location.pathname || '/';
@@ -269,6 +273,17 @@ export default function App() {
     }
   });
   const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+
+  // Detect scroll for sticky header blur + shadow effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Initial page load spinning logo animation
   useEffect(() => {
@@ -518,10 +533,16 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* HEADER PRINCIPAL */}
-      <header className="sticky top-0 z-40 h-16 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4 sm:gap-8">
-          {/* Zone 1: Brand Wordmark + Spinning Logo Icon */}
+      {/* HEADER PRINCIPAL (Sticky, flou transparent + ombre au scroll) */}
+      <header
+        className={`sticky top-0 z-40 h-16 transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-md border-b border-slate-200/80 dark:border-slate-800/80'
+            : 'bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4">
+          {/* 1. À gauche : Logo */}
           <a
             href="/"
             onClick={(e) => {
@@ -541,16 +562,24 @@ export default function App() {
             <span>{SITE_CONFIG.name}</span>
           </a>
 
-          {/* Zone 2: Navigation Links */}
+          {/* 2. Au milieu : Liens principaux avec ligne bleue qui glisse de gauche à droite au survol */}
           <nav
             aria-label="Navigation principale"
-            className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300"
+            className="hidden lg:flex items-center gap-7 text-sm font-semibold"
           >
-            {SITE_CONFIG.headerNav.map((item) => {
+            {[
+              { label: tNav('home'), path: '/' },
+              { label: tNav('articles'), path: '/guides/' },
+              { label: tNav('tools'), path: '/outils/' },
+              { label: tNav('about'), path: '/a-propos' },
+              { label: tNav('contact'), path: '/contact' },
+            ].map((item) => {
               const isActive =
                 item.path === '/'
                   ? currentPath === '/'
-                  : currentPath.startsWith(item.path.replace(/\/$/, ''));
+                  : item.path === '/guides/'
+                    ? currentPath.startsWith('/guides') || currentPath.startsWith('/article/')
+                    : currentPath.startsWith(item.path.replace(/\/$/, ''));
               return (
                 <a
                   key={item.path}
@@ -559,28 +588,67 @@ export default function App() {
                     e.preventDefault();
                     navigate(item.path);
                   }}
-                  className={`hover:text-blue-600 dark:hover:text-blue-400 transition-colors whitespace-nowrap shrink-0 ${
+                  className={`group relative py-1.5 transition-colors duration-200 whitespace-nowrap shrink-0 ${
                     isActive
-                      ? 'text-blue-600 dark:text-blue-400 font-bold underline underline-offset-8'
-                      : ''
+                      ? 'text-blue-600 dark:text-blue-400 font-bold'
+                      : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400'
                   }`}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {/* Ligne bleue animée qui glisse de gauche à droite */}
+                  <span
+                    className={`absolute left-0 bottom-0 h-0.5 w-full bg-blue-600 dark:bg-blue-400 rounded-full origin-left transition-transform duration-300 ease-out ${
+                      isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    }`}
+                  />
                 </a>
               );
             })}
           </nav>
 
-          {/* Zone 3: Search + Theme Toggle + Mobile Menu */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* 3. À droite : Sélecteur FR | عربي + Recherche + Mode Clair/Sombre + Bouton "Lire les articles" + Burger Mobile */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Bouton Multilingue FR | عربي */}
+            <div
+              role="group"
+              aria-label="Sélecteur de langue FR / عربي"
+              className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 text-xs font-bold shrink-0"
+            >
+              <button
+                type="button"
+                onClick={() => setLocale('fr')}
+                aria-pressed={locale === 'fr'}
+                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                  locale === 'fr'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
+                }`}
+              >
+                FR
+              </button>
+              <span className="text-slate-300 dark:text-slate-700 px-0.5 select-none">|</span>
+              <button
+                type="button"
+                onClick={() => setLocale('ar')}
+                aria-pressed={locale === 'ar'}
+                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                  locale === 'ar'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-blue-600'
+                }`}
+              >
+                عربي
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => setSearchModalOpen(true)}
               aria-label="Rechercher sur le site"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 cursor-pointer whitespace-nowrap shrink-0"
+              title="Rechercher"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
             >
-              <Search className="w-4 h-4 text-slate-500" />
-              <span className="hidden sm:inline">Rechercher...</span>
+              <Search className="w-4 h-4" />
             </button>
 
             <button
@@ -588,57 +656,163 @@ export default function App() {
               onClick={() => setDarkMode((prev) => !prev)}
               aria-label={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
               title={darkMode ? 'Mode clair (☀️)' : 'Mode sombre (🌙)'}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer"
+              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
+            {/* Bouton "Lire les articles" sur ordinateur */}
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate('/guides/')}
+              className="hidden lg:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-blue-600/20 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>{tNav('readArticles')}</span>
+            </motion.button>
+
+            {/* Bouton Burger Mobile (3 lignes qui se transforment en X avec animation douce) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label="Menu de navigation mobile"
-              className="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer"
+              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-expanded={mobileMenuOpen}
+              className="lg:hidden relative w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <motion.span
+                animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="w-5 h-0.5 bg-current rounded-full block origin-center"
+              />
+              <motion.span
+                animate={mobileMenuOpen ? { opacity: 0, x: 8 } : { opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                className="w-5 h-0.5 bg-current rounded-full block"
+              />
+              <motion.span
+                animate={mobileMenuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="w-5 h-0.5 bg-current rounded-full block origin-center"
+              />
             </button>
           </div>
         </div>
-
-        {/* Menu Mobile Hamburger */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-5 space-y-4 shadow-lg">
-            <div className="grid grid-cols-2 gap-2">
-              {SITE_CONFIG.headerNav.map((item) => (
-                <button
-                  key={item.path}
-                  type="button"
-                  onClick={() => navigate(item.path)}
-                  className="px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold bg-slate-50 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Accès direct aux 15 catégories
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.slug}
-                    type="button"
-                    onClick={() => navigate(cat.url)}
-                    className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
-                  >
-                    {cat.shortName}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </header>
+
+      {/* MENU MOBILE COULISSANT DEPUIS LA DROITE (Slide-over avec liens un par un) */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Voile d'arrière-plan */}
+            <motion.div
+              key="mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 top-16 z-40 bg-slate-950/50 backdrop-blur-xs lg:hidden"
+            />
+
+            {/* Panneau latéral droit */}
+            <motion.aside
+              key="mobile-drawer"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+              aria-label="Menu mobile"
+              className="fixed top-16 right-0 bottom-0 z-50 w-80 max-w-[85vw] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto px-5 py-6 flex flex-col justify-between lg:hidden"
+            >
+              <div className="space-y-6">
+                {/* Liens principaux apparaissant un par un */}
+                <nav className="flex flex-col space-y-1.5">
+                  {[
+                    { label: tNav('home'), path: '/' },
+                    { label: tNav('articles'), path: '/guides/' },
+                    { label: tNav('tools'), path: '/outils/' },
+                    { label: tNav('ai'), path: '/ia/' },
+                    { label: tNav('programming'), path: '/programmation/' },
+                    { label: tNav('kdp'), path: '/kdp/' },
+                    { label: tNav('about'), path: '/a-propos' },
+                    { label: tNav('contact'), path: '/contact' },
+                  ].map((item, idx) => {
+                    const isActive =
+                      item.path === '/'
+                        ? currentPath === '/'
+                        : currentPath.startsWith(item.path.replace(/\/$/, ''));
+                    return (
+                      <motion.button
+                        key={item.path}
+                        type="button"
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 16 }}
+                        transition={{
+                          duration: 0.28,
+                          delay: 0.05 + idx * 0.05,
+                          ease: 'easeOut',
+                        }}
+                        onClick={() => navigate(item.path)}
+                        className={`w-full px-4 py-3 rounded-xl text-start text-sm font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
+                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <ChevronRight className="w-4 h-4 opacity-60 rtl:rotate-180" />
+                      </motion.button>
+                    );
+                  })}
+                </nav>
+
+                {/* Bouton CTA mobile */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.45 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => navigate('/guides/')}
+                    className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>{tNav('readArticles')}</span>
+                  </button>
+                </motion.div>
+
+                {/* Accès rapide aux 15 catégories */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.52 }}
+                  className="pt-4 border-t border-slate-200 dark:border-slate-800"
+                >
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                    {tNav('categoriesTitle')}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.slug}
+                        type="button"
+                        onClick={() => navigate(cat.url)}
+                        className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
+                      >
+                        {cat.shortName}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* MODALE DE RECHERCHE INTERNE RAPIDE */}
       {searchModalOpen && (
@@ -801,7 +975,7 @@ export default function App() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">
                       <span className="font-bold text-blue-600 dark:text-blue-400">
-                        Portail Francophone {SITE_CONFIG.name}
+                        {tTitles('welcome')}
                       </span>
                       <span aria-hidden="true">·</span>
                       <span>15 Catégories Spécialisées</span>
@@ -816,7 +990,7 @@ export default function App() {
                       className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08] mb-5"
                       style={{ fontSize: 'clamp(2.25rem, 4vw, 3.5rem)' }}
                     >
-                      {SITE_CONFIG.hero.title}
+                      {tTitles('heroTitle')}
                     </motion.h1>
 
                     <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mb-4">
@@ -835,7 +1009,7 @@ export default function App() {
                       className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       <BookOpen className="w-4 h-4" />
-                      <span>{SITE_CONFIG.hero.primaryCta}</span>
+                      <span>{tNav('readArticles')}</span>
                     </button>
 
                     <button
@@ -882,7 +1056,7 @@ export default function App() {
                           key={pillar.path}
                           type="button"
                           onClick={() => navigate(pillar.path)}
-                          className="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 text-left transition-colors cursor-pointer"
+                          className="p-3 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 text-start transition-colors cursor-pointer"
                         >
                           <div className="text-xs font-bold text-white">{pillar.label}</div>
                           <div className="text-[11px] text-slate-400 truncate mt-0.5">{pillar.sub}</div>
@@ -905,7 +1079,7 @@ export default function App() {
               </div>
             </section>
 
-            {/* 2. SECTION "À LA UNE" (4 Dossiers Principaux - Images 100% Uniques) */}
+            {/* 2. SECTION "DERNIERS ARTICLES / À LA UNE" */}
             <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                 <div>
@@ -913,7 +1087,7 @@ export default function App() {
                     Sélection Éditoriale
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    À la Une
+                    {tTitles('latestArticles')}
                   </h2>
                 </div>
                 <button
@@ -921,8 +1095,8 @@ export default function App() {
                   onClick={() => navigate('/guides/')}
                   className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
-                  <span>Voir tous les guides</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{tNav('readArticles')}</span>
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </button>
               </div>
 
@@ -942,7 +1116,7 @@ export default function App() {
                     <span>Pôle Intelligence Artificielle</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Intelligence Artificielle : ChatGPT, Gemini & Automatisation
+                    {tTitles('aiSection')}
                   </h2>
                 </div>
 
@@ -983,7 +1157,7 @@ export default function App() {
                     <span>Développement & Ingénierie Logicielle</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Programmation : Python, PHP, JavaScript & Web
+                    {tTitles('programmingSection')}
                   </h2>
                 </div>
 
@@ -1023,7 +1197,7 @@ export default function App() {
                     <span>Utilitaires Web 100 % Locaux & Gratuits</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Outils Numériques Gratuits en Ligne
+                    {tTitles('toolsSection')}
                   </h2>
                 </div>
                 <button
@@ -1032,7 +1206,7 @@ export default function App() {
                   className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
                   <span>Accéder à tous les outils</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </button>
               </div>
 
@@ -1064,7 +1238,7 @@ export default function App() {
                     </div>
                     <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
                       <span>Utiliser l’outil gratuitement</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </div>
                   </motion.div>
                 ))}
@@ -1078,7 +1252,7 @@ export default function App() {
                   Dossiers Pas à Pas de A à Z
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  Guides Complets pour Créer vos Projets
+                  {tTitles('guidesSection')}
                 </h2>
               </div>
 
@@ -1132,7 +1306,7 @@ export default function App() {
                     </div>
                     <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
                       <span>Consulter le guide complet</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </div>
                   </motion.div>
                 ))}
@@ -1146,7 +1320,7 @@ export default function App() {
                   Exploration Thématique
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  Les 15 Catégories du Portail {SITE_CONFIG.name}
+                  {tTitles('categoriesSection')}
                 </h2>
               </div>
 
@@ -1712,7 +1886,7 @@ export default function App() {
                   {/* Articles similaires */}
                   <section className="pt-4">
                     <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-5">
-                      Articles similaires à découvrir
+                      {tTitles('relatedArticles')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {similarArticles.map((sim, idx) => (
@@ -1754,7 +1928,7 @@ export default function App() {
                 Boîte à Outils {SITE_CONFIG.name}
               </div>
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
-                Outils Gratuits en Ligne
+                {tTitles('toolsHubTitle')}
               </h1>
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
                 Tous nos utilitaires fonctionnent directement dans votre navigateur,

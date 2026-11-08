@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "articles": "المقالات",
+    "tools": "الأدوات المجانية",
+    "ai": "الذكاء الاصطناعي",
+    "programming": "البرمجة والكود",
+    "kdp": "أمازون KDP والكتب",
+    "about": "من نحن",
+    "contact": "اتصل بنا",
+    "readArticles": "اقرأ المقالات",
+    "categoriesTitle": "الأقسام الـ 15"
+  },
+  "titles": {
+    "welcome": "مرحبا بكم في TechIA Lab",
+    "heroTitle": "تعلّم الذكاء الاصطناعي والبرمجة وإنشاء التطبيقات خطوة بخطوة",
+    "latestArticles": "آخر المقالات",
+    "aiSection": "الذكاء الاصطناعي: ChatGPT و Gemini والأتمتة",
+    "programmingSection": "البرمجة: Python و PHP و JavaScript والويب",
+    "toolsSection": "أدوات رقمية مجانية عبر الإنترنت",
+    "guidesSection": "أدلة شاملة لإنشاء مشاريعك",
+    "categoriesSection": "الأقسام الـ 15 لبوابة TechIA Lab",
+    "relatedArticles": "مقالات مشابهة قد تهمك",
+    "toolsHubTitle": "أدوات مجانية عبر الإنترنت",
+    "guidesHubTitle": "أدلة شاملة من الألف إلى الياء"
+  }
+}

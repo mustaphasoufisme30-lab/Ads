@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "articles": "Articles",
+    "tools": "Outils",
+    "ai": "Intelligence Artificielle",
+    "programming": "Programmation & Code",
+    "kdp": "Kindle & KDP",
+    "about": "À propos",
+    "contact": "Contact",
+    "readArticles": "Lire les articles",
+    "categoriesTitle": "Les 15 catégories"
+  },
+  "titles": {
+    "welcome": "Bienvenue sur TechIA Lab",
+    "heroTitle": "Apprenez l’IA, le Code et la Création d’Applications Pas à Pas",
+    "latestArticles": "Derniers articles",
+    "aiSection": "Intelligence Artificielle : ChatGPT, Gemini & Automatisation",
+    "programmingSection": "Programmation : Python, PHP, JavaScript & Web",
+    "toolsSection": "Outils Numériques Gratuits en Ligne",
+    "guidesSection": "Guides Complets pour Créer vos Projets",
+    "categoriesSection": "Les 15 Catégories du Portail TechIA Lab",
+    "relatedArticles": "Articles similaires à découvrir",
+    "toolsHubTitle": "Outils Gratuits en Ligne",
+    "guidesHubTitle": "Guides Complets de A à Z"
+  }
+}

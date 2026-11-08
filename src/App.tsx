@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight,
   BookOpen,
@@ -158,13 +159,28 @@ const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => 
   );
 };
 
-// Reusable Article Card
+// Reusable Article Card with Framer Motion (staggered fade-in, scroll reveal, and 5px hover lift + stronger shadow)
 const ArticleCard: React.FC<{
   article: Article;
   onNavigate: (path: string) => void;
-}> = ({ article, onNavigate }) => {
+  index?: number;
+}> = ({ article, onNavigate, index = 0 }) => {
   return (
-    <article className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors overflow-hidden flex flex-col justify-between">
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.12 }}
+      transition={{
+        duration: 0.45,
+        delay: (index % 4) * 0.1,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      whileHover={{
+        y: -5,
+        transition: { duration: 0.2, ease: 'easeOut' },
+      }}
+      className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-shadow duration-200 overflow-hidden flex flex-col justify-between"
+    >
       <div>
         <div
           onClick={() => onNavigate(article.url)}
@@ -173,7 +189,7 @@ const ArticleCard: React.FC<{
           <SafeImage
             src={article.image}
             alt={article.imageAlt}
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           />
         </div>
 
@@ -219,7 +235,7 @@ const ArticleCard: React.FC<{
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
-    </article>
+    </motion.article>
   );
 };
 
@@ -252,6 +268,13 @@ export default function App() {
       return false;
     }
   });
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
+
+  // Initial page load spinning logo animation
+  useEffect(() => {
+    const timer = setTimeout(() => setIsPageLoading(false), 450);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sync dark mode class on <html>
   useEffect(() => {
@@ -280,6 +303,10 @@ export default function App() {
 
   const navigate = (path: string) => {
     const normalized = path.startsWith('/') ? path : `/${path}`;
+    if (normalized !== currentPath) {
+      setIsPageLoading(true);
+      setTimeout(() => setIsPageLoading(false), 320);
+    }
     setCurrentPath(normalized);
     setMobileMenuOpen(false);
     setSearchModalOpen(false);
@@ -464,19 +491,54 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* ANIMATION DE CHARGEMENT : Petit logo qui tourne quand la page charge */}
+      <AnimatePresence>
+        {isPageLoading && (
+          <motion.div
+            key="page-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-xs"
+            aria-label="Chargement de la page"
+          >
+            <div className="flex flex-col items-center gap-3 px-6 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 0.9, ease: 'linear' }}
+                className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30"
+              >
+                <Cpu className="w-5 h-5" />
+              </motion.div>
+              <span className="text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">
+                {SITE_CONFIG.name}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* HEADER PRINCIPAL */}
       <header className="sticky top-0 z-40 h-16 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4 sm:gap-8">
-          {/* Zone 1: Brand Wordmark */}
+          {/* Zone 1: Brand Wordmark + Spinning Logo Icon */}
           <a
             href="/"
             onClick={(e) => {
               e.preventDefault();
               navigate('/');
             }}
-            className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-2.5 text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap shrink-0 group"
           >
-            {SITE_CONFIG.name}
+            <motion.span
+              animate={isPageLoading ? { rotate: 360 } : { rotate: 0 }}
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs"
+            >
+              <Cpu className="w-4 h-4" />
+            </motion.span>
+            <span>{SITE_CONFIG.name}</span>
           </a>
 
           {/* Zone 2: Navigation Links */}
@@ -730,7 +792,12 @@ export default function App() {
             {/* 1. HERO SECTION */}
             <section className="py-10 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
-                <div className="lg:col-span-7 flex flex-col justify-between">
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className="lg:col-span-7 flex flex-col justify-between"
+                >
                   <div>
                     <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">
                       <span className="font-bold text-blue-600 dark:text-blue-400">
@@ -742,12 +809,15 @@ export default function App() {
                       <span>9 Outils Gratuits en Ligne</span>
                     </div>
 
-                    <h1
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
                       className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08] mb-5"
                       style={{ fontSize: 'clamp(2.25rem, 4vw, 3.5rem)' }}
                     >
                       {SITE_CONFIG.hero.title}
-                    </h1>
+                    </motion.h1>
 
                     <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mb-4">
                       {SITE_CONFIG.hero.subtitle}
@@ -777,9 +847,15 @@ export default function App() {
                       <span>{SITE_CONFIG.hero.secondaryCta}</span>
                     </button>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="lg:col-span-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 p-6 sm:p-7 flex flex-col justify-between text-white">
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
+                  className="lg:col-span-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 p-6 sm:p-7 flex flex-col justify-between text-white shadow-sm hover:shadow-xl hover:shadow-slate-900/20 transition-shadow duration-200"
+                >
                   <div>
                     <div className="flex items-center justify-between gap-2 text-xs font-mono text-blue-400 mb-3">
                       <span>DOSSIER PHARE · {ARTICLES[0].categoryName.toUpperCase()}</span>
@@ -825,7 +901,7 @@ export default function App() {
                       Consulter le dossier →
                     </button>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </section>
 
@@ -851,8 +927,8 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[ARTICLES[0], ARTICLES[1], ARTICLES[5], ARTICLES[6]].map((article) => (
-                  <ArticleCard key={article.id} article={article} onNavigate={navigate} />
+                {[ARTICLES[0], ARTICLES[1], ARTICLES[5], ARTICLES[6]].map((article, idx) => (
+                  <ArticleCard key={article.id} article={article} onNavigate={navigate} index={idx} />
                 ))}
               </div>
             </section>
@@ -892,8 +968,8 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[ARTICLES[4], ARTICLES[7], ARTICLES[9]].map((art) => (
-                  <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                {[ARTICLES[4], ARTICLES[7], ARTICLES[9]].map((art, idx) => (
+                  <ArticleCard key={art.id} article={art} onNavigate={navigate} index={idx} />
                 ))}
               </div>
             </section>
@@ -932,8 +1008,8 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[ARTICLES[2], ARTICLES[3], ARTICLES[8]].map((art) => (
-                  <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                {[ARTICLES[2], ARTICLES[3], ARTICLES[8]].map((art, idx) => (
+                  <ArticleCard key={art.id} article={art} onNavigate={navigate} index={idx} />
                 ))}
               </div>
             </section>
@@ -961,11 +1037,16 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {TOOLS.map((tool) => (
-                  <div
+                {TOOLS.map((tool, idx) => (
+                  <motion.div
                     key={tool.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.12 }}
+                    transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
+                    whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                     onClick={() => navigate(tool.url)}
-                    className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 transition-colors cursor-pointer flex flex-col justify-between"
+                    className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3">
@@ -985,7 +1066,7 @@ export default function App() {
                       <span>Utiliser l’outil gratuitement</span>
                       <ArrowRight className="w-4 h-4" />
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </section>
@@ -1027,11 +1108,16 @@ export default function App() {
                     path: '/article/comment-creer-un-site-web-avec-l-ia',
                     tag: 'Site Web & SEO',
                   },
-                ].map((guide) => (
-                  <div
+                ].map((guide, idx) => (
+                  <motion.div
                     key={guide.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.12 }}
+                    transition={{ duration: 0.4, delay: (idx % 2) * 0.1, ease: 'easeOut' }}
+                    whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                     onClick={() => navigate(guide.path)}
-                    className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 transition-colors cursor-pointer flex flex-col justify-between"
+                    className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
                   >
                     <div>
                       <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
@@ -1048,7 +1134,7 @@ export default function App() {
                       <span>Consulter le guide complet</span>
                       <ArrowRight className="w-4 h-4" />
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </section>
@@ -1151,7 +1237,12 @@ export default function App() {
               </nav>
 
               {/* En-tête Catégorie avec Fiche Thématique */}
-              <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-10">
+              <motion.header
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-10"
+              >
                 <div className="lg:col-span-7 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
                     <Layers className="w-4 h-4" />
@@ -1203,7 +1294,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-              </header>
+              </motion.header>
 
               {/* Contenu principal + Sidebar */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -1218,8 +1309,8 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {paginatedArticles.map((art) => (
-                      <ArticleCard key={art.id} article={art} onNavigate={navigate} />
+                    {paginatedArticles.map((art, idx) => (
+                      <ArticleCard key={art.id} article={art} onNavigate={navigate} index={idx} />
                     ))}
                   </div>
 
@@ -1319,7 +1410,12 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Colonne Principale de l'Article */}
                 <article className="lg:col-span-8 space-y-8">
-                  <header className="space-y-4">
+                  <motion.header
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="space-y-4"
+                  >
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <button
                         type="button"
@@ -1342,7 +1438,7 @@ export default function App() {
                     <h1 className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
                       {article.title}
                     </h1>
-                  </header>
+                  </motion.header>
 
                   {/* Image Principale */}
                   <div className="aspect-16/9 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
@@ -1619,8 +1715,8 @@ export default function App() {
                       Articles similaires à découvrir
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {similarArticles.map((sim) => (
-                        <ArticleCard key={sim.id} article={sim} onNavigate={navigate} />
+                      {similarArticles.map((sim, idx) => (
+                        <ArticleCard key={sim.id} article={sim} onNavigate={navigate} index={idx} />
                       ))}
                     </div>
                   </section>
@@ -1648,7 +1744,12 @@ export default function App() {
               ]}
             />
 
-            <header className="max-w-3xl">
+            <motion.header
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-3xl"
+            >
               <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
                 Boîte à Outils {SITE_CONFIG.name}
               </div>
@@ -1660,14 +1761,19 @@ export default function App() {
                 sans inscription obligatoire et dans le respect total de la
                 confidentialité de vos documents.
               </p>
-            </header>
+            </motion.header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {TOOLS.map((tool) => (
-                <article
+              {TOOLS.map((tool, idx) => (
+                <motion.article
                   key={tool.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.12 }}
+                  transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
+                  whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                   onClick={() => navigate(tool.url)}
-                  className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 transition-colors cursor-pointer flex flex-col justify-between"
+                  className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
@@ -1687,7 +1793,7 @@ export default function App() {
                     <span>Ouvrir l’outil</span>
                     <ArrowRight className="w-4 h-4" />
                   </div>
-                </article>
+                </motion.article>
               ))}
             </div>
           </div>

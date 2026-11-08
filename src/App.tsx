@@ -74,6 +74,7 @@ const SafeImage: React.FC<{
 
 // Reusable Newsletter Form without false promises
 const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+  const tHome = useTranslations('home');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -102,27 +103,27 @@ const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => 
             compact ? 'text-blue-600 dark:text-blue-400' : 'text-blue-400'
           }`}
         >
-          Veille Technique & Tutoriels
+          {tHome('newsletterBadge')}
         </div>
         <h3
           className={`font-extrabold tracking-tight mb-2 ${
             compact ? 'text-lg text-slate-900 dark:text-white' : 'text-2xl sm:text-3xl text-white'
           }`}
         >
-          {SITE_CONFIG.newsletter.title}
+          {tHome('newsletterTitle')}
         </h3>
         <p
           className={`text-sm leading-relaxed mb-5 ${
             compact ? 'text-slate-600 dark:text-slate-400' : 'text-slate-300'
           }`}
         >
-          {SITE_CONFIG.newsletter.description}
+          {tHome('newsletterDesc')}
         </p>
 
         {status === 'success' ? (
           <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 text-xs sm:text-sm font-semibold flex items-center gap-2">
             <Check className="w-4 h-4 shrink-0" />
-            <span>Inscription enregistrée. Merci pour votre intérêt !</span>
+            <span>{tHome('newsletterSuccess')}</span>
           </div>
         ) : (
           <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2.5" noValidate>
@@ -133,8 +134,8 @@ const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => 
                 setEmail(e.target.value);
                 if (status !== 'idle') setStatus('idle');
               }}
-              placeholder="Votre adresse email..."
-              aria-label="Adresse email pour la newsletter"
+              placeholder={tHome('newsletterPlaceholder')}
+              aria-label={tHome('newsletterPlaceholder')}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm border focus:outline-none focus:border-blue-500 ${
                 compact
                   ? 'bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100'
@@ -145,13 +146,13 @@ const NewsletterBox: React.FC<{ compact?: boolean }> = ({ compact = false }) => 
               type="submit"
               className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
             >
-              {SITE_CONFIG.newsletter.buttonLabel}
+              {tHome('newsletterBtn')}
             </button>
           </form>
         )}
         {status === 'error' && (
           <p className="text-xs text-red-500 mt-2">
-            Veuillez saisir une adresse email valide.
+            {tHome('newsletterError')}
           </p>
         )}
       </div>
@@ -165,6 +166,18 @@ const ArticleCard: React.FC<{
   onNavigate: (path: string) => void;
   index?: number;
 }> = ({ article, onNavigate, index = 0 }) => {
+  const tHome = useTranslations('home');
+  const tArticles = useTranslations('articles');
+
+  const num = article.id.replace('art-', '');
+  const titleKey = `art${num}Title` as Parameters<typeof tArticles>[0];
+  const excerptKey = `art${num}Excerpt` as Parameters<typeof tArticles>[0];
+  const catKey = `art${num}Cat` as Parameters<typeof tArticles>[0];
+
+  const localizedTitle = tArticles(titleKey) || article.title;
+  const localizedExcerpt = tArticles(excerptKey) || article.excerpt;
+  const localizedCategory = tArticles(catKey) || article.categoryName;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 24 }}
@@ -188,7 +201,7 @@ const ArticleCard: React.FC<{
         >
           <SafeImage
             src={article.image}
-            alt={article.imageAlt}
+            alt={localizedTitle}
             className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           />
         </div>
@@ -201,7 +214,7 @@ const ArticleCard: React.FC<{
               onClick={() => onNavigate(`/${article.categorySlug}/`)}
               className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
             >
-              {article.categoryName}
+              {localizedCategory}
             </button>
             <span aria-hidden="true">·</span>
             <span>{article.date}</span>
@@ -213,26 +226,26 @@ const ArticleCard: React.FC<{
             onClick={() => onNavigate(article.url)}
             className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug mb-2.5"
           >
-            {article.title}
+            {localizedTitle}
           </h3>
 
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
-            {article.excerpt}
+            {localizedExcerpt}
           </p>
         </div>
       </div>
 
       <div className="px-5 sm:px-6 pb-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          {article.isCompleteGuide ? 'Guide complet' : 'Tutoriel pratique'}
+          {article.isCompleteGuide ? tHome('completeGuideLabel') : tHome('tutorialLabel')}
         </span>
         <button
           type="button"
           onClick={() => onNavigate(article.url)}
           className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <span>Lire l'article</span>
-          <ArrowRight className="w-4 h-4" />
+          <span>{tHome('readMore')}</span>
+          <ArrowRight className="w-4 h-4 rtl:rotate-180" />
         </button>
       </div>
     </motion.article>
@@ -242,7 +255,73 @@ const ArticleCard: React.FC<{
 export default function App() {
   const { locale, setLocale } = useLocale();
   const tNav = useTranslations('nav');
-  const tTitles = useTranslations('titles');
+  const tHome = useTranslations('home');
+  const tCategories = useTranslations('categories');
+  const tArticles = useTranslations('articles');
+  const tTools = useTranslations('tools');
+  const tFooter = useTranslations('footer');
+
+  // Helper to get localized article title, excerpt, and category badge
+  const getLocalizedArticle = (art: Article) => {
+    const num = art.id.replace('art-', '');
+    const titleKey = `art${num}Title` as Parameters<typeof tArticles>[0];
+    const excerptKey = `art${num}Excerpt` as Parameters<typeof tArticles>[0];
+    const catKey = `art${num}Cat` as Parameters<typeof tArticles>[0];
+    return {
+      title: tArticles(titleKey) || art.title,
+      excerpt: tArticles(excerptKey) || art.excerpt,
+      categoryName: tArticles(catKey) || art.categoryName,
+    };
+  };
+
+  // Helper to get localized tool name and summary
+  const getLocalizedTool = (toolId: string, fallbackName: string, fallbackSummary: string) => {
+    const map: Record<string, { name: Parameters<typeof tTools>[0]; summary: Parameters<typeof tTools>[0] }> = {
+      'pdf-vers-images': { name: 't1Name', summary: 't1Summary' },
+      'images-vers-pdf': { name: 't2Name', summary: 't2Summary' },
+      'fusionner-pdf': { name: 't3Name', summary: 't3Summary' },
+      'compresser-pdf': { name: 't4Name', summary: 't4Summary' },
+      'qr-code': { name: 't5Name', summary: 't5Summary' },
+      'compteur-de-mots': { name: 't6Name', summary: 't6Summary' },
+      'generateur-mot-de-passe': { name: 't7Name', summary: 't7Summary' },
+      'convertisseur-unites': { name: 't8Name', summary: 't8Summary' },
+      'calculateur': { name: 't9Name', summary: 't9Summary' },
+    };
+    const keys = map[toolId];
+    if (!keys) return { name: fallbackName, summary: fallbackSummary };
+    return {
+      name: tTools(keys.name),
+      summary: tTools(keys.summary),
+    };
+  };
+
+  // Helper to get localized category name & description
+  const getLocalizedCategory = (slug: string, fallbackName: string, fallbackDesc: string) => {
+    const map: Record<string, { name: Parameters<typeof tCategories>[0]; desc: Parameters<typeof tCategories>[0] }> = {
+      ia: { name: 'iaName', desc: 'iaDesc' },
+      chatgpt: { name: 'chatgptName', desc: 'chatgptDesc' },
+      'google-ai-gemini': { name: 'geminiName', desc: 'geminiDesc' },
+      'canva-creation': { name: 'canvaName', desc: 'canvaDesc' },
+      programmation: { name: 'programmationName', desc: 'programmationDesc' },
+      python: { name: 'pythonName', desc: 'pythonDesc' },
+      php: { name: 'phpName', desc: 'phpDesc' },
+      javascript: { name: 'javascriptName', desc: 'javascriptDesc' },
+      'creation-sites-web': { name: 'sitesWebName', desc: 'sitesWebDesc' },
+      'applications-android': { name: 'androidName', desc: 'androidDesc' },
+      'outils-pdf': { name: 'pdfName', desc: 'pdfDesc' },
+      kdp: { name: 'kdpName', desc: 'kdpDesc' },
+      'outils-en-ligne': { name: 'outilsLigneName', desc: 'outilsLigneDesc' },
+      automatisation: { name: 'automatisationName', desc: 'automatisationDesc' },
+      'freelance-revenus-numeriques': { name: 'freelanceName', desc: 'freelanceDesc' },
+      guides: { name: 'guidesName', desc: 'guidesDesc' },
+    };
+    const keys = map[slug];
+    if (!keys) return { name: fallbackName, desc: fallbackDesc };
+    return {
+      name: tCategories(keys.name),
+      desc: tCategories(keys.desc),
+    };
+  };
 
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -334,7 +413,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Global internal search across Articles, Categories, Tools, and Guides
+  // Global internal search across Articles, Categories, Tools, and Guides (supports FR & AR search)
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) {
@@ -345,34 +424,42 @@ export default function App() {
       };
     }
 
-    const matchedArticles = ARTICLES.filter(
-      (a) =>
+    const matchedArticles = ARTICLES.filter((a) => {
+      const loc = getLocalizedArticle(a);
+      return (
         a.title.toLowerCase().includes(q) ||
         a.excerpt.toLowerCase().includes(q) ||
-        a.categoryName.toLowerCase().includes(q) ||
-        a.sections.some((s) => s.h2.toLowerCase().includes(q))
-    );
+        loc.title.toLowerCase().includes(q) ||
+        loc.excerpt.toLowerCase().includes(q) ||
+        loc.categoryName.toLowerCase().includes(q)
+      );
+    });
 
-    const matchedTools = TOOLS.filter(
-      (t) =>
+    const matchedTools = TOOLS.filter((t) => {
+      const loc = getLocalizedTool(t.id, t.name, t.summary);
+      return (
         t.name.toLowerCase().includes(q) ||
         t.summary.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q)
-    );
+        loc.name.toLowerCase().includes(q) ||
+        loc.summary.toLowerCase().includes(q)
+      );
+    });
 
-    const matchedCategories = CATEGORIES.filter(
-      (c) =>
+    const matchedCategories = CATEGORIES.filter((c) => {
+      const loc = getLocalizedCategory(c.slug, c.name, c.seoDescription);
+      return (
         c.name.toLowerCase().includes(q) ||
-        c.seoDescription.toLowerCase().includes(q) ||
-        c.topics.some((topic) => topic.toLowerCase().includes(q))
-    );
+        loc.name.toLowerCase().includes(q) ||
+        loc.desc.toLowerCase().includes(q)
+      );
+    });
 
     return {
       articles: matchedArticles,
       tools: matchedTools,
       categories: matchedCategories,
     };
-  }, [searchQuery]);
+  }, [searchQuery, locale]);
 
   // Route matching logic
   const route = useMemo(() => {
@@ -433,10 +520,10 @@ export default function App() {
       {/* Sidebar Search */}
       <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
-          Recherche rapide
+          {tHome('searchArticle')}
         </h3>
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
@@ -445,57 +532,69 @@ export default function App() {
               setSearchModalOpen(true);
             }}
             onFocus={() => setSearchModalOpen(true)}
-            placeholder="Articles, outils, Python, KDP..."
-            aria-label="Rechercher sur le site"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-blue-600"
+            placeholder={tHome('searchArticle')}
+            aria-label={tHome('searchArticle')}
+            className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:border-blue-600"
           />
         </div>
       </div>
 
-      {/* Sidebar Categories */}
+      {/* Sidebar Categories (Catégories / التصنيفات) */}
       <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
-          Catégories principales
+          {tHome('categories')}
         </h3>
         <ul className="divide-y divide-slate-200/70 dark:divide-slate-800 text-xs sm:text-sm">
-          {CATEGORIES.slice(0, 10).map((cat) => (
-            <li key={cat.slug} className="py-2 flex items-center justify-between">
+          {[
+            { label: tCategories('ai'), path: '/ia/' },
+            { label: tCategories('tech'), path: '/programmation/' },
+            { label: tCategories('money'), path: '/kdp/' },
+            { label: tCategories('tutorials'), path: '/guides/' },
+            ...CATEGORIES.slice(0, 6).map((cat) => ({
+              label: getLocalizedCategory(cat.slug, cat.name, cat.seoDescription).name,
+              path: cat.url,
+            })),
+          ].map((item, idx) => (
+            <li key={`${item.path}-${idx}`} className="py-2 flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => navigate(cat.url)}
-                className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-left cursor-pointer"
+                onClick={() => navigate(item.path)}
+                className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium text-start cursor-pointer"
               >
-                {cat.name}
+                {item.label}
               </button>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0 rtl:rotate-180" />
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Popular Articles */}
+      {/* Popular Articles (Articles populaires / المقالات الأكثر قراءة) */}
       <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
         <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
-          Guides populaires
+          {tHome('popularArticles')}
         </h3>
         <div className="space-y-4">
-          {ARTICLES.slice(0, 4).map((art, i) => (
-            <div
-              key={art.id}
-              onClick={() => navigate(art.url)}
-              className="group cursor-pointer flex items-start gap-3"
-            >
-              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 tabular-nums">
-                0{i + 1}
-              </span>
-              <div>
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug">
-                  {art.title}
-                </h4>
-                <span className="text-[11px] text-slate-500 font-mono">{art.readTime}</span>
+          {ARTICLES.slice(0, 4).map((art, i) => {
+            const loc = getLocalizedArticle(art);
+            return (
+              <div
+                key={art.id}
+                onClick={() => navigate(art.url)}
+                className="group cursor-pointer flex items-start gap-3"
+              >
+                <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 tabular-nums">
+                  0{i + 1}
+                </span>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug">
+                    {loc.title}
+                  </h4>
+                  <span className="text-[11px] text-slate-500 font-mono">{art.readTime}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -503,6 +602,8 @@ export default function App() {
       <NewsletterBox compact />
     </aside>
   );
+
+  const featuredArt = getLocalizedArticle(ARTICLES[0]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
@@ -515,7 +616,7 @@ export default function App() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-xs"
-            aria-label="Chargement de la page"
+            aria-label="TechIA Lab"
           >
             <div className="flex flex-col items-center gap-3 px-6 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
               <motion.div
@@ -564,7 +665,7 @@ export default function App() {
 
           {/* 2. Au milieu : Liens principaux avec ligne bleue qui glisse de gauche à droite au survol */}
           <nav
-            aria-label="Navigation principale"
+            aria-label={tNav('home')}
             className="hidden lg:flex items-center gap-7 text-sm font-semibold"
           >
             {[
@@ -611,7 +712,7 @@ export default function App() {
             {/* Bouton Multilingue FR | عربي */}
             <div
               role="group"
-              aria-label="Sélecteur de langue FR / عربي"
+              aria-label="FR | عربي"
               className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 text-xs font-bold shrink-0"
             >
               <button
@@ -644,8 +745,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => setSearchModalOpen(true)}
-              aria-label="Rechercher sur le site"
-              title="Rechercher"
+              aria-label={tNav('searchPlaceholder')}
+              title={tNav('searchPlaceholder')}
               className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
             >
               <Search className="w-4 h-4" />
@@ -654,8 +755,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setDarkMode((prev) => !prev)}
-              aria-label={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
-              title={darkMode ? 'Mode clair (☀️)' : 'Mode sombre (🌙)'}
+              aria-label="Theme"
               className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 cursor-pointer transition-colors"
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -677,7 +777,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label="Menu"
               aria-expanded={mobileMenuOpen}
               className="lg:hidden relative w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
             >
@@ -734,8 +834,9 @@ export default function App() {
                     { label: tNav('articles'), path: '/guides/' },
                     { label: tNav('tools'), path: '/outils/' },
                     { label: tNav('ai'), path: '/ia/' },
-                    { label: tNav('programming'), path: '/programmation/' },
-                    { label: tNav('kdp'), path: '/kdp/' },
+                    { label: tNav('technology'), path: '/programmation/' },
+                    { label: tNav('earnMoney'), path: '/kdp/' },
+                    { label: tNav('tutorials'), path: '/outils-pdf/' },
                     { label: tNav('about'), path: '/a-propos' },
                     { label: tNav('contact'), path: '/contact' },
                   ].map((item, idx) => {
@@ -785,7 +886,7 @@ export default function App() {
                   </button>
                 </motion.div>
 
-                {/* Accès rapide aux 15 catégories */}
+                {/* Accès rapide aux catégories */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -796,16 +897,19 @@ export default function App() {
                     {tNav('categoriesTitle')}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.slug}
-                        type="button"
-                        onClick={() => navigate(cat.url)}
-                        className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
-                      >
-                        {cat.shortName}
-                      </button>
-                    ))}
+                    {CATEGORIES.map((cat) => {
+                      const loc = getLocalizedCategory(cat.slug, cat.shortName, cat.seoDescription);
+                      return (
+                        <button
+                          key={cat.slug}
+                          type="button"
+                          onClick={() => navigate(cat.url)}
+                          className="text-xs text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
+                        >
+                          {loc.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </motion.div>
               </div>
@@ -819,7 +923,7 @@ export default function App() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Recherche globale TechIA Lab"
+          aria-label={tNav('searchPlaceholder')}
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-start justify-center p-4 pt-16 sm:pt-24"
           onClick={() => setSearchModalOpen(false)}
         >
@@ -834,7 +938,7 @@ export default function App() {
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher un article, un outil gratuit (PDF, QR Code), une catégorie..."
+                placeholder={tNav('searchPlaceholder')}
                 className="w-full bg-transparent text-base sm:text-lg text-slate-900 dark:text-white focus:outline-none"
               />
               {searchQuery && (
@@ -843,7 +947,7 @@ export default function App() {
                   onClick={() => setSearchQuery('')}
                   className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  Effacer
+                  {tNav('clear')}
                 </button>
               )}
               <button
@@ -860,25 +964,28 @@ export default function App() {
               {searchResults.tools.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                    Outils Gratuits ({searchResults.tools.length})
+                    {tNav('tools')} ({searchResults.tools.length})
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {searchResults.tools.map((tool) => (
-                      <button
-                        key={tool.id}
-                        type="button"
-                        onClick={() => navigate(tool.url)}
-                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 text-left flex items-center justify-between gap-3 cursor-pointer"
-                      >
-                        <div>
-                          <div className="text-sm font-bold text-slate-900 dark:text-white">
-                            {tool.shortName}
+                    {searchResults.tools.map((tool) => {
+                      const loc = getLocalizedTool(tool.id, tool.shortName, tool.summary);
+                      return (
+                        <button
+                          key={tool.id}
+                          type="button"
+                          onClick={() => navigate(tool.url)}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 text-start flex items-center justify-between gap-3 cursor-pointer"
+                        >
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white">
+                              {loc.name}
+                            </div>
+                            <div className="text-xs text-slate-500 line-clamp-1">{loc.summary}</div>
                           </div>
-                          <div className="text-xs text-slate-500 line-clamp-1">{tool.summary}</div>
-                        </div>
-                        <Wrench className="w-4 h-4 text-blue-600 shrink-0" />
-                      </button>
-                    ))}
+                          <Wrench className="w-4 h-4 text-blue-600 shrink-0" />
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -886,40 +993,43 @@ export default function App() {
               {/* Articles correspondants */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-                  Articles & Guides ({searchResults.articles.length})
+                  {tNav('articles')} ({searchResults.articles.length})
                 </h4>
                 {searchResults.articles.length === 0 ? (
                   <p className="text-sm text-slate-500 py-4">
-                    Aucun article trouvé pour « {searchQuery} ».
+                    {tNav('noResults')} « {searchQuery} ».
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {searchResults.articles.map((art) => (
-                      <div
-                        key={art.id}
-                        onClick={() => navigate(art.url)}
-                        className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 flex items-center gap-4 cursor-pointer"
-                      >
-                        <SafeImage
-                          src={art.image}
-                          alt={art.imageAlt}
-                          className="w-20 h-14 rounded-lg object-cover shrink-0 hidden sm:block"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 mb-0.5">
-                            <span className="font-semibold text-blue-600 dark:text-blue-400">
-                              {art.categoryName}
-                            </span>
-                            <span>·</span>
-                            <span>{art.date}</span>
+                    {searchResults.articles.map((art) => {
+                      const loc = getLocalizedArticle(art);
+                      return (
+                        <div
+                          key={art.id}
+                          onClick={() => navigate(art.url)}
+                          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 hover:border-blue-500 border border-slate-200 dark:border-slate-800 flex items-center gap-4 cursor-pointer"
+                        >
+                          <SafeImage
+                            src={art.image}
+                            alt={loc.title}
+                            className="w-20 h-14 rounded-lg object-cover shrink-0 hidden sm:block"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500 mb-0.5">
+                              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                                {loc.categoryName}
+                              </span>
+                              <span>·</span>
+                              <span>{art.date}</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                              {loc.title}
+                            </div>
+                            <div className="text-xs text-slate-500 line-clamp-1">{loc.excerpt}</div>
                           </div>
-                          <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                            {art.title}
-                          </div>
-                          <div className="text-xs text-slate-500 line-clamp-1">{art.excerpt}</div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -928,19 +1038,22 @@ export default function App() {
               {searchResults.categories.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Catégories ({searchResults.categories.length})
+                    {tHome('categories')} ({searchResults.categories.length})
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {searchResults.categories.map((c) => (
-                      <button
-                        key={c.slug}
-                        type="button"
-                        onClick={() => navigate(c.url)}
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        {c.name}
-                      </button>
-                    ))}
+                    {searchResults.categories.map((c) => {
+                      const loc = getLocalizedCategory(c.slug, c.name, c.seoDescription);
+                      return (
+                        <button
+                          key={c.slug}
+                          type="button"
+                          onClick={() => navigate(c.url)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          {loc.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -957,10 +1070,10 @@ export default function App() {
         {route.type === 'home' && (
           <>
             <SeoHead
-              title={`${SITE_CONFIG.name} — ${SITE_CONFIG.slogan}`}
-              description={SITE_CONFIG.positioning}
+              title={`${SITE_CONFIG.name} — ${tHome('welcome')}`}
+              description={tHome('heroSubtitle')}
               path="/"
-              breadcrumbs={[{ name: 'Accueil', path: '/' }]}
+              breadcrumbs={[{ name: tNav('home'), path: '/' }]}
             />
 
             {/* 1. HERO SECTION */}
@@ -975,12 +1088,12 @@ export default function App() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">
                       <span className="font-bold text-blue-600 dark:text-blue-400">
-                        {tTitles('welcome')}
+                        {tHome('welcome')}
                       </span>
                       <span aria-hidden="true">·</span>
-                      <span>15 Catégories Spécialisées</span>
+                      <span>{tHome('badgeCategories')}</span>
                       <span aria-hidden="true">·</span>
-                      <span>9 Outils Gratuits en Ligne</span>
+                      <span>{tHome('badgeTools')}</span>
                     </div>
 
                     <motion.h1
@@ -990,16 +1103,33 @@ export default function App() {
                       className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08] mb-5"
                       style={{ fontSize: 'clamp(2.25rem, 4vw, 3.5rem)' }}
                     >
-                      {tTitles('heroTitle')}
+                      {tHome('heroTitle')}
                     </motion.h1>
 
                     <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mb-4">
-                      {SITE_CONFIG.hero.subtitle}
+                      {tHome('heroSubtitle')}
                     </p>
 
-                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mb-8">
-                      {SITE_CONFIG.positioning}
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mb-6">
+                      {tHome('heroDesc')}
                     </p>
+
+                    {/* Barre de recherche rapide sur la page d'accueil */}
+                    <div className="relative max-w-xl mb-6">
+                      <Search className="w-4 h-4 text-slate-400 absolute start-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setSearchModalOpen(true);
+                        }}
+                        onFocus={() => setSearchModalOpen(true)}
+                        placeholder={tHome('searchArticle')}
+                        aria-label={tHome('searchArticle')}
+                        className="w-full ps-11 pe-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4">
@@ -1009,7 +1139,7 @@ export default function App() {
                       className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       <BookOpen className="w-4 h-4" />
-                      <span>{tNav('readArticles')}</span>
+                      <span>{tHome('primaryCta')}</span>
                     </button>
 
                     <button
@@ -1018,7 +1148,7 @@ export default function App() {
                       className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 text-sm sm:text-base font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span>{SITE_CONFIG.hero.secondaryCta}</span>
+                      <span>{tHome('secondaryCta')}</span>
                     </button>
                   </div>
                 </motion.div>
@@ -1032,25 +1162,27 @@ export default function App() {
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 text-xs font-mono text-blue-400 mb-3">
-                      <span>DOSSIER PHARE · {ARTICLES[0].categoryName.toUpperCase()}</span>
-                      <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">GUIDE COMPLET</span>
+                      <span>{tHome('featuredBadge')} · {featuredArt.categoryName}</span>
+                      <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                        {tHome('completeGuideBadge')}
+                      </span>
                     </div>
                     <h2
                       onClick={() => navigate(ARTICLES[0].url)}
                       className="text-lg sm:text-xl font-bold leading-snug hover:text-blue-400 transition-colors cursor-pointer mb-3"
                     >
-                      {ARTICLES[0].title}
+                      {featuredArt.title}
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 line-clamp-3">
-                      {ARTICLES[0].excerpt}
+                      {featuredArt.excerpt}
                     </p>
 
                     <div className="grid grid-cols-2 gap-2.5 mb-5">
                       {[
-                        { label: 'Pôle IA & LLM', sub: 'ChatGPT, Gemini, Prompts', path: '/ia/' },
-                        { label: 'Programmation', sub: 'Python, PHP 8, JS/TS', path: '/programmation/' },
-                        { label: '9 Outils Gratuits', sub: 'PDF, QR Code, Calculs', path: '/outils/' },
-                        { label: 'Édition & KDP', sub: 'Canva, Kindle, Broché', path: '/kdp/' },
+                        { label: tHome('pillarAiTitle'), sub: tHome('pillarAiSub'), path: '/ia/' },
+                        { label: tHome('pillarTechTitle'), sub: tHome('pillarTechSub'), path: '/programmation/' },
+                        { label: tHome('pillarMoneyTitle'), sub: tHome('pillarMoneySub'), path: '/kdp/' },
+                        { label: tHome('pillarTutoTitle'), sub: tHome('pillarTutoSub'), path: '/outils/' },
                       ].map((pillar) => (
                         <button
                           key={pillar.path}
@@ -1066,13 +1198,14 @@ export default function App() {
                   </div>
 
                   <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
-                    <span>{ARTICLES[0].readTime} de lecture</span>
+                    <span>{ARTICLES[0].readTime} {tHome('readTimeSuffix')}</span>
                     <button
                       type="button"
                       onClick={() => navigate(ARTICLES[0].url)}
-                      className="font-bold text-blue-400 hover:underline cursor-pointer"
+                      className="font-bold text-blue-400 hover:underline cursor-pointer inline-flex items-center gap-1"
                     >
-                      Consulter le dossier →
+                      <span>{tHome('readMore')}</span>
+                      <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                     </button>
                   </div>
                 </motion.div>
@@ -1084,10 +1217,10 @@ export default function App() {
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                 <div>
                   <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                    Sélection Éditoriale
+                    {tHome('editorialSelection')}
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    {tTitles('latestArticles')}
+                    {tHome('latestArticles')}
                   </h2>
                 </div>
                 <button
@@ -1095,7 +1228,7 @@ export default function App() {
                   onClick={() => navigate('/guides/')}
                   className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
-                  <span>{tNav('readArticles')}</span>
+                  <span>{tHome('viewAllArticles')}</span>
                   <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </button>
               </div>
@@ -1113,21 +1246,21 @@ export default function App() {
                 <div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
                     <Sparkles className="w-4 h-4" />
-                    <span>Pôle Intelligence Artificielle</span>
+                    <span>{tHome('aiPoleBadge')}</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    {tTitles('aiSection')}
+                    {tHome('aiSectionTitle')}
                   </h2>
                 </div>
 
                 {/* Piliers IA cliquables */}
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { label: 'ChatGPT', path: '/chatgpt/' },
-                    { label: 'Google AI / Gemini', path: '/google-ai-gemini/' },
-                    { label: 'Génération d’images & Design', path: '/canva-creation/' },
-                    { label: 'Automatisation IA', path: '/automatisation/' },
-                    { label: 'Outils IA', path: '/ia/' },
+                    { label: tCategories('chatgptName'), path: '/chatgpt/' },
+                    { label: tCategories('geminiName'), path: '/google-ai-gemini/' },
+                    { label: tCategories('canvaName'), path: '/canva-creation/' },
+                    { label: tCategories('automatisationName'), path: '/automatisation/' },
+                    { label: tCategories('iaName'), path: '/ia/' },
                   ].map((pill) => (
                     <button
                       key={pill.path}
@@ -1148,26 +1281,26 @@ export default function App() {
               </div>
             </section>
 
-            {/* 4. SECTION "PROGRAMMATION" (3 Articles Programmation Dédiés sans doublon) */}
+            {/* 4. SECTION "TECHNOLOGIE & PROGRAMMATION" (3 Articles Programmation Dédiés sans doublon) */}
             <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
                 <div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
                     <Code2 className="w-4 h-4" />
-                    <span>Développement & Ingénierie Logicielle</span>
+                    <span>{tHome('progPoleBadge')}</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    {tTitles('programmingSection')}
+                    {tHome('progSectionTitle')}
                   </h2>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { label: 'Python', path: '/python/' },
-                    { label: 'PHP', path: '/php/' },
-                    { label: 'JavaScript', path: '/javascript/' },
-                    { label: 'Développement Web', path: '/creation-sites-web/' },
-                    { label: 'Applications', path: '/applications-android/' },
+                    { label: tCategories('pythonName'), path: '/python/' },
+                    { label: tCategories('phpName'), path: '/php/' },
+                    { label: tCategories('javascriptName'), path: '/javascript/' },
+                    { label: tCategories('sitesWebName'), path: '/creation-sites-web/' },
+                    { label: tCategories('androidName'), path: '/applications-android/' },
                   ].map((item) => (
                     <button
                       key={item.path}
@@ -1194,10 +1327,10 @@ export default function App() {
                 <div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
                     <Wrench className="w-4 h-4" />
-                    <span>Utilitaires Web 100 % Locaux & Gratuits</span>
+                    <span>{tHome('toolsPoleBadge')}</span>
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    {tTitles('toolsSection')}
+                    {tHome('toolsSectionTitle')}
                   </h2>
                 </div>
                 <button
@@ -1205,86 +1338,89 @@ export default function App() {
                   onClick={() => navigate('/outils/')}
                   className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
-                  <span>Accéder à tous les outils</span>
+                  <span>{tHome('accessAllTools')}</span>
                   <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {TOOLS.map((tool, idx) => (
-                  <motion.div
-                    key={tool.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.12 }}
-                    transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
-                    whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
-                    onClick={() => navigate(tool.url)}
-                    className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3">
-                        <span className="font-bold text-blue-600 dark:text-blue-400">
-                          {tool.category}
-                        </span>
-                        <span className="font-mono text-[11px]">{tool.url}</span>
+                {TOOLS.map((tool, idx) => {
+                  const locTool = getLocalizedTool(tool.id, tool.name, tool.summary);
+                  return (
+                    <motion.div
+                      key={tool.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.12 }}
+                      transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
+                      whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
+                      onClick={() => navigate(tool.url)}
+                      className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3">
+                          <span className="font-bold text-blue-600 dark:text-blue-400">
+                            {tTools('freeToolBadge')}
+                          </span>
+                          <span className="font-mono text-[11px]">{tool.url}</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
+                          {locTool.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                          {locTool.summary}
+                        </p>
                       </div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mb-2">
-                        {tool.name}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                        {tool.summary}
-                      </p>
-                    </div>
-                    <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
-                      <span>Utiliser l’outil gratuitement</span>
-                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                        <span>{tHome('useToolFree')}</span>
+                        <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </section>
 
-            {/* 6. SECTION "GUIDES COMPLETS" */}
+            {/* 6. SECTION "TUTORIELS & GUIDES COMPLETS" + ARTICLES POPULAIRES */}
             <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="mb-8">
                 <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                  Dossiers Pas à Pas de A à Z
+                  {tHome('guidesPoleBadge')}
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  {tTitles('guidesSection')}
+                  {tHome('guidesSectionTitle')}
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   {
-                    title: 'Créer une application web de A à Z',
-                    desc: 'Architecture frontend/backend, typage TypeScript, sécurité des clés API et mise en production.',
+                    title: tHome('guide1Title'),
+                    desc: tHome('guide1Desc'),
                     path: '/article/comment-creer-une-application-web-avec-l-intelligence-artificielle',
-                    tag: 'Application Web',
+                    tag: tHome('guide1Tag'),
                   },
                   {
-                    title: 'Créer une application Android & Mobile',
-                    desc: 'Concevoir une interface mobile fluide, installer une Progressive Web App (PWA) et structurer son projet.',
+                    title: tHome('guide2Title'),
+                    desc: tHome('guide2Desc'),
                     path: '/applications-android/',
-                    tag: 'Android & Mobile',
+                    tag: tHome('guide2Tag'),
                   },
                   {
-                    title: 'Créer un livre Kindle et Broché sur Amazon KDP',
-                    desc: 'Formats en pouces/cm, calcul de la tranche, marges avec fond perdu dans Canva et redevances.',
+                    title: tHome('guide3Title'),
+                    desc: tHome('guide3Desc'),
                     path: '/article/comment-creer-un-livre-kindle-avec-canva',
-                    tag: 'Kindle & KDP',
+                    tag: tHome('guide3Tag'),
                   },
                   {
-                    title: 'Créer un site web professionnel avec l’IA',
-                    desc: 'Structure HTML5 sémantique, Core Web Vitals, SEO technique et compatibilité Google AdSense.',
+                    title: tHome('guide4Title'),
+                    desc: tHome('guide4Desc'),
                     path: '/article/comment-creer-un-site-web-avec-l-ia',
-                    tag: 'Site Web & SEO',
+                    tag: tHome('guide4Tag'),
                   },
                 ].map((guide, idx) => (
                   <motion.div
-                    key={guide.title}
+                    key={guide.path}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.12 }}
@@ -1305,7 +1441,7 @@ export default function App() {
                       </p>
                     </div>
                     <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
-                      <span>Consulter le guide complet</span>
+                      <span>{tHome('readMore')}</span>
                       <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </div>
                   </motion.div>
@@ -1313,38 +1449,67 @@ export default function App() {
               </div>
             </section>
 
-            {/* 7. RÉPERTOIRE DES 15 CATÉGORIES PRINCIPALES */}
+            {/* 7. RÉPERTOIRE DES CATÉGORIES (Catégories / التصنيفات) */}
             <section className="py-12 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="mb-8">
                 <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                  Exploration Thématique
+                  {tHome('categoriesPoleBadge')}
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  {tTitles('categoriesSection')}
+                  {tHome('categoriesSectionTitle')}
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {CATEGORIES.map((cat) => (
+              {/* Les 4 grandes catégories mises en avant */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {[
+                  { name: tCategories('ai'), desc: tCategories('iaDesc'), url: '/ia/' },
+                  { name: tCategories('tech'), desc: tCategories('programmationDesc'), url: '/programmation/' },
+                  { name: tCategories('money'), desc: tCategories('freelanceDesc'), url: '/kdp/' },
+                  { name: tCategories('tutorials'), desc: tCategories('guidesDesc'), url: '/guides/' },
+                ].map((mainCat) => (
                   <button
-                    key={cat.slug}
+                    key={mainCat.url}
                     type="button"
-                    onClick={() => navigate(cat.url)}
-                    className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-left transition-colors cursor-pointer flex flex-col justify-between"
+                    onClick={() => navigate(mainCat.url)}
+                    className="p-5 rounded-2xl bg-blue-600/5 dark:bg-blue-950/30 border border-blue-500/30 hover:border-blue-600 text-start transition-colors cursor-pointer flex flex-col justify-between"
                   >
                     <div>
-                      <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400">
-                        {cat.id < 10 ? `0${cat.id}` : cat.id}. {cat.group}
-                      </span>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1 mb-1.5">
-                        {cat.name}
+                      <h3 className="text-base font-extrabold text-blue-600 dark:text-blue-400 mb-1.5">
+                        {mainCat.name}
                       </h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                        {mainCat.desc}
+                      </p>
                     </div>
-                    <span className="text-[11px] text-slate-500 line-clamp-2">
-                      {cat.seoDescription}
-                    </span>
                   </button>
                 ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {CATEGORIES.map((cat) => {
+                  const loc = getLocalizedCategory(cat.slug, cat.name, cat.seoDescription);
+                  return (
+                    <button
+                      key={cat.slug}
+                      type="button"
+                      onClick={() => navigate(cat.url)}
+                      className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-start transition-colors cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <span className="text-[11px] font-mono text-blue-600 dark:text-blue-400">
+                          {cat.id < 10 ? `0${cat.id}` : cat.id}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1 mb-1.5">
+                          {loc.name}
+                        </h3>
+                      </div>
+                      <span className="text-[11px] text-slate-500 line-clamp-2">
+                        {loc.desc}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -1365,19 +1530,18 @@ export default function App() {
                 id: 0,
                 slug: 'guides',
                 url: '/guides/',
-                name: 'Guides Complets de A à Z',
-                shortName: 'Guides Complets',
+                name: tCategories('guidesName'),
+                shortName: tCategories('guidesName'),
                 group: 'Guides',
-                seoTitle: 'Guides Complets : IA, Applications Web, Python et KDP | TechIA Lab',
-                seoDescription:
-                  'Tous nos dossiers complets étape par étape pour créer une application web, maîtriser Python, publier un livre KDP et automatiser vos projets.',
-                longDescription:
-                  'Retrouvez ici l’ensemble de nos grands dossiers méthodologiques structurés avec exemples de code, tableaux comparatifs et feuilles de route.',
+                seoTitle: `${tCategories('guidesName')} | ${SITE_CONFIG.name}`,
+                seoDescription: tCategories('guidesDesc'),
+                longDescription: tCategories('guidesDesc'),
                 image: ARTICLES[0].image,
-                topics: ['Application Web A à Z', 'Python Complet', 'Amazon KDP', 'Site Web IA'],
+                topics: [tCategories('ai'), tCategories('tech'), tCategories('money'), tCategories('tutorials')],
               }
             : route.category;
 
+          const locCat = getLocalizedCategory(cat.slug, cat.name, cat.longDescription);
           const allCatArticles = getArticlesForCategory(cat.slug);
           const displayArticles = allCatArticles.length > 0 ? allCatArticles : ARTICLES;
           const itemsPerPage = 4;
@@ -1391,23 +1555,23 @@ export default function App() {
           return (
             <div className="py-8 sm:py-12">
               <SeoHead
-                title={cat.seoTitle}
-                description={cat.seoDescription}
+                title={`${locCat.name} | ${SITE_CONFIG.name}`}
+                description={locCat.desc}
                 path={cat.url}
                 image={cat.image}
                 breadcrumbs={[
-                  { name: 'Accueil', path: '/' },
-                  { name: cat.name, path: cat.url },
+                  { name: tNav('home'), path: '/' },
+                  { name: locCat.name, path: cat.url },
                 ]}
               />
 
               {/* Fil d'Ariane */}
-              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 mb-6 flex items-center gap-2">
+              <nav aria-label="Breadcrumb" className="text-xs text-slate-500 mb-6 flex items-center gap-2">
                 <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
-                  Accueil
+                  {tNav('home')}
                 </button>
                 <span>/</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{cat.name}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{locCat.name}</span>
               </nav>
 
               {/* En-tête Catégorie avec Fiche Thématique */}
@@ -1420,20 +1584,20 @@ export default function App() {
                 <div className="lg:col-span-7 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
                     <Layers className="w-4 h-4" />
-                    <span>Dossier Thématique · {cat.group}</span>
+                    <span>{tCategories('thematicDossier')}</span>
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    {cat.name}
+                    {locCat.name}
                   </h1>
                   <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {cat.longDescription}
+                    {locCat.desc}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 pt-2">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">Sujets couverts :</span>
-                    {cat.topics.map((t, idx) => (
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{tCategories('coveredTopics')}</span>
+                    {[tCategories('ai'), tCategories('tech'), tCategories('money'), tCategories('tutorials')].map((t, idx) => (
                       <React.Fragment key={t}>
                         <span>{t}</span>
-                        {idx < cat.topics.length - 1 && <span aria-hidden="true">·</span>}
+                        {idx < 3 && <span aria-hidden="true">·</span>}
                       </React.Fragment>
                     ))}
                   </div>
@@ -1441,14 +1605,14 @@ export default function App() {
                 <div className="lg:col-span-5 rounded-xl p-5 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                      Repères du Dossier
+                      {tCategories('dossierHighlights')}
                     </span>
                     <span className="text-xs font-mono text-slate-500 tabular-nums">
-                      {displayArticles.length} guides disponibles
+                      {displayArticles.length} {tCategories('availableGuides')}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2.5">
-                    {cat.topics.slice(0, 4).map((topic) => (
+                    {[tCategories('ai'), tCategories('tech'), tCategories('money'), tCategories('tutorials')].map((topic) => (
                       <div
                         key={topic}
                         className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"
@@ -1458,13 +1622,13 @@ export default function App() {
                     ))}
                   </div>
                   <div className="pt-2 flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Outils interactifs associés</span>
+                    <span className="text-slate-500">{tCategories('associatedTools')}</span>
                     <button
                       type="button"
                       onClick={() => navigate('/outils/')}
                       className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                     >
-                      Ouvrir les outils →
+                      {tCategories('openTools')}
                     </button>
                   </div>
                 </div>
@@ -1475,10 +1639,10 @@ export default function App() {
                 <div className="lg:col-span-8 space-y-8">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                      Articles & Tutoriels ({displayArticles.length})
+                      {tCategories('articlesAndTutorials')} ({displayArticles.length})
                     </h2>
                     <span className="text-xs font-mono text-slate-500 tabular-nums">
-                      Page {safePage} sur {totalPages}
+                      {tCategories('page')} {safePage} {tCategories('of')} {totalPages}
                     </span>
                   </div>
 
@@ -1497,8 +1661,8 @@ export default function App() {
                         onClick={() => setCategoryPageIndex((p) => Math.max(1, p - 1))}
                         className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <ChevronLeft className="w-4 h-4" />
-                        <span>Précédent</span>
+                        <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+                        <span>{tCategories('prev')}</span>
                       </button>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                         <button
@@ -1520,8 +1684,8 @@ export default function App() {
                         onClick={() => setCategoryPageIndex((p) => Math.min(totalPages, p + 1))}
                         className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-bold disabled:opacity-40 inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <span>Suivant</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <span>{tCategories('next')}</span>
+                        <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                       </button>
                     </div>
                   )}
@@ -1538,13 +1702,14 @@ export default function App() {
            ==================================================================== */}
         {route.type === 'article-detail' && (() => {
           const { article } = route;
+          const locArt = getLocalizedArticle(article);
           const similarArticles = ARTICLES.filter((a) => a.id !== article.id).slice(0, 3);
 
           return (
             <div className="py-8 sm:py-12">
               <SeoHead
-                title={article.seoTitle}
-                description={article.metaDescription}
+                title={locArt.title}
+                description={locArt.excerpt}
                 path={article.url}
                 type="article"
                 image={article.image}
@@ -1552,20 +1717,20 @@ export default function App() {
                   author: article.author,
                   datePublished: article.date,
                   dateModified: article.updatedDate,
-                  category: article.categoryName,
+                  category: locArt.categoryName,
                 }}
                 breadcrumbs={[
-                  { name: 'Accueil', path: '/' },
-                  { name: article.categoryName, path: `/${article.categorySlug}/` },
-                  { name: article.title, path: article.url },
+                  { name: tNav('home'), path: '/' },
+                  { name: locArt.categoryName, path: `/${article.categorySlug}/` },
+                  { name: locArt.title, path: article.url },
                 ]}
                 faq={article.faq}
               />
 
               {/* Fil d'Ariane */}
-              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 mb-6 flex flex-wrap items-center gap-2">
+              <nav aria-label="Breadcrumb" className="text-xs text-slate-500 mb-6 flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
-                  Accueil
+                  {tNav('home')}
                 </button>
                 <span>/</span>
                 <button
@@ -1573,11 +1738,11 @@ export default function App() {
                   onClick={() => navigate(`/${article.categorySlug}/`)}
                   className="hover:text-blue-600 cursor-pointer"
                 >
-                  {article.categoryName}
+                  {locArt.categoryName}
                 </button>
                 <span>/</span>
                 <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-xs sm:max-w-md">
-                  {article.title}
+                  {locArt.title}
                 </span>
               </nav>
 
@@ -1596,12 +1761,12 @@ export default function App() {
                         onClick={() => navigate(`/${article.categorySlug}/`)}
                         className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                       >
-                        {article.categoryName}
+                        {locArt.categoryName}
                       </button>
                       <span aria-hidden="true">·</span>
-                      <span>Par {article.author}</span>
+                      <span>{tArticles('by')} {article.author}</span>
                       <span aria-hidden="true">·</span>
-                      <span>Publié le {article.date}</span>
+                      <span>{tArticles('publishedOn')} {article.date}</span>
                       <span aria-hidden="true">·</span>
                       <span className="inline-flex items-center gap-1 font-mono tabular-nums">
                         <Clock className="w-3.5 h-3.5" />
@@ -1610,15 +1775,19 @@ export default function App() {
                     </div>
 
                     <h1 className="text-2xl sm:text-4xl lg:text-[40px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
-                      {article.title}
+                      {locArt.title}
                     </h1>
+
+                    <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
+                      {locArt.excerpt}
+                    </p>
                   </motion.header>
 
                   {/* Image Principale */}
                   <div className="aspect-16/9 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
                     <SafeImage
                       src={article.image}
-                      alt={article.imageAlt}
+                      alt={locArt.title}
                       eager
                       className="w-full h-full object-cover"
                     />
@@ -1633,12 +1802,12 @@ export default function App() {
 
                   {/* Table des matières automatique (TOC) */}
                   <nav
-                    aria-label="Sommaire de l'article"
+                    aria-label={tArticles('tocTitle')}
                     className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
                   >
                     <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white mb-3">
                       <List className="w-4 h-4 text-blue-600" />
-                      <span>Sommaire de l’article</span>
+                      <span>{tArticles('tocTitle')}</span>
                     </div>
                     <ol className="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                       {article.sections.map((sec) => (
@@ -1656,7 +1825,7 @@ export default function App() {
                           href="#conclusion-article"
                           className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
                         >
-                          Conclusion & Points clés à retenir
+                          {tArticles('conclusionToc')}
                         </a>
                       </li>
                     </ol>
@@ -1707,12 +1876,12 @@ export default function App() {
                                 {copiedCodeId === sec.id ? (
                                   <>
                                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                    <span>Copié</span>
+                                    <span>{tArticles('copied')}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Copy className="w-3.5 h-3.5" />
-                                    <span>Copier le code</span>
+                                    <span>{tArticles('copyCode')}</span>
                                   </>
                                 )}
                               </button>
@@ -1726,8 +1895,8 @@ export default function App() {
                         {/* Tableau comparatif */}
                         {sec.table && (
                           <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                              <caption className="p-3 text-left text-xs font-semibold text-slate-500 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                            <table className="w-full text-start border-collapse text-xs sm:text-sm">
+                              <caption className="p-3 text-start text-xs font-semibold text-slate-500 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                                 {sec.table.caption}
                               </caption>
                               <thead>
@@ -1774,7 +1943,7 @@ export default function App() {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                            Notre recommandation
+                            {tArticles('recommendationBadge')}
                           </span>
                           <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
                             {article.recommendations.title}
@@ -1785,7 +1954,7 @@ export default function App() {
                           onClick={() => navigate('/outils/')}
                           className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 underline cursor-pointer"
                         >
-                          Comparer les solutions
+                          {tArticles('compareSolutions')}
                         </button>
                       </div>
 
@@ -1803,7 +1972,7 @@ export default function App() {
                                 {rec.purpose}
                               </p>
                               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1.5">
-                                Point fort : {rec.strengths}
+                                {tArticles('strengthLabel')} {rec.strengths}
                               </p>
                             </div>
                             <button
@@ -1811,7 +1980,7 @@ export default function App() {
                               onClick={() => navigate(rec.url)}
                               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold w-fit cursor-pointer"
                             >
-                              <span>Voir l’outil</span>
+                              <span>{tArticles('viewTool')}</span>
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -1825,7 +1994,7 @@ export default function App() {
                     id="conclusion-article"
                     className="p-6 rounded-2xl bg-slate-900 text-white space-y-3 scroll-mt-24"
                   >
-                    <h2 className="text-lg sm:text-xl font-bold">Conclusion</h2>
+                    <h2 className="text-lg sm:text-xl font-bold">{tArticles('conclusionTitle')}</h2>
                     {article.conclusion.map((c, idx) => (
                       <p key={idx} className="text-sm sm:text-base text-slate-300 leading-relaxed">
                         {c}
@@ -1837,7 +2006,7 @@ export default function App() {
                   {article.faq && article.faq.length > 0 && (
                     <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                       <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                        Questions fréquentes sur ce sujet
+                        {tArticles('faqTitle')}
                       </h2>
                       <div className="space-y-3">
                         {article.faq.map((f, i) => (
@@ -1861,7 +2030,7 @@ export default function App() {
                   <div className="py-5 border-t border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
                     <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
                       <Share2 className="w-4 h-4 text-blue-600" />
-                      <span>Partager ce tutoriel :</span>
+                      <span>{tArticles('shareLabel')}</span>
                     </span>
                     <div className="flex flex-wrap items-center gap-2">
                       <button
@@ -1870,15 +2039,15 @@ export default function App() {
                         className="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                       >
                         {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{shareCopied ? 'Lien copié !' : 'Copier le lien'}</span>
+                        <span>{shareCopied ? tArticles('linkCopied') : tArticles('copyLink')}</span>
                       </button>
                       <a
-                        href={`mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(
-                          `${article.title} — ${SITE_CONFIG.siteUrl}${article.url}`
+                        href={`mailto:?subject=${encodeURIComponent(locArt.title)}&body=${encodeURIComponent(
+                          `${locArt.title} — ${SITE_CONFIG.siteUrl}${article.url}`
                         )}`}
                         className="px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-xs font-semibold"
                       >
-                        Partager par Email
+                        {tArticles('shareEmail')}
                       </a>
                     </div>
                   </div>
@@ -1886,7 +2055,7 @@ export default function App() {
                   {/* Articles similaires */}
                   <section className="pt-4">
                     <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-5">
-                      {tTitles('relatedArticles')}
+                      {tArticles('relatedArticles')}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       {similarArticles.map((sim, idx) => (
@@ -1909,12 +2078,12 @@ export default function App() {
         {route.type === 'tools-hub' && (
           <div className="py-8 sm:py-12 space-y-10">
             <SeoHead
-              title={`Outils Numériques Gratuits en Ligne (PDF, QR Code, Texte, Dev) | ${SITE_CONFIG.name}`}
-              description="Utilisez gratuitement nos 9 outils numériques en ligne : convertisseur PDF vers images, images vers PDF, fusionner/compresser PDF, QR Code, compteur de mots et calculateurs."
+              title={`${tTools('hubTitle')} | ${SITE_CONFIG.name}`}
+              description={tTools('hubDesc')}
               path="/outils/"
               breadcrumbs={[
-                { name: 'Accueil', path: '/' },
-                { name: 'Outils Gratuits', path: '/outils/' },
+                { name: tNav('home'), path: '/' },
+                { name: tNav('tools'), path: '/outils/' },
               ]}
             />
 
@@ -1925,50 +2094,51 @@ export default function App() {
               className="max-w-3xl"
             >
               <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
-                Boîte à Outils {SITE_CONFIG.name}
+                {tTools('hubBadge')}
               </div>
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
-                {tTitles('toolsHubTitle')}
+                {tTools('hubTitle')}
               </h1>
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
-                Tous nos utilitaires fonctionnent directement dans votre navigateur,
-                sans inscription obligatoire et dans le respect total de la
-                confidentialité de vos documents.
+                {tTools('hubDesc')}
               </p>
             </motion.header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {TOOLS.map((tool, idx) => (
-                <motion.article
-                  key={tool.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.12 }}
-                  transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
-                  whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
-                  onClick={() => navigate(tool.url)}
-                  className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                      <span className="font-bold text-blue-600 dark:text-blue-400">
-                        {tool.category}
-                      </span>
-                      <span className="font-mono">{tool.url}</span>
+              {TOOLS.map((tool, idx) => {
+                const locTool = getLocalizedTool(tool.id, tool.name, tool.summary);
+                return (
+                  <motion.article
+                    key={tool.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.12 }}
+                    transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
+                    whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
+                    onClick={() => navigate(tool.url)}
+                    className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                          {tTools('freeToolBadge')}
+                        </span>
+                        <span className="font-mono">{tool.url}</span>
+                      </div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                        {locTool.name}
+                      </h2>
+                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                        {locTool.summary}
+                      </p>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                      {tool.name}
-                    </h2>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                      {tool.summary}
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
-                    <span>Ouvrir l’outil</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </motion.article>
-              ))}
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+                      <span>{tHome('openTool')}</span>
+                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1978,42 +2148,43 @@ export default function App() {
            ==================================================================== */}
         {route.type === 'tool-detail' && (() => {
           const { tool } = route;
+          const locTool = getLocalizedTool(tool.id, tool.name, tool.summary);
           return (
             <div className="py-8 sm:py-12 space-y-10">
               <SeoHead
-                title={tool.seoTitle}
-                description={tool.seoDescription}
+                title={`${locTool.name} | ${SITE_CONFIG.name}`}
+                description={locTool.summary}
                 path={tool.url}
                 type="software"
                 breadcrumbs={[
-                  { name: 'Accueil', path: '/' },
-                  { name: 'Outils Gratuits', path: '/outils/' },
-                  { name: tool.shortName, path: tool.url },
+                  { name: tNav('home'), path: '/' },
+                  { name: tNav('tools'), path: '/outils/' },
+                  { name: locTool.name, path: tool.url },
                 ]}
                 faq={tool.faq}
               />
 
-              <nav aria-label="Fil d'Ariane" className="text-xs text-slate-500 flex items-center gap-2">
+              <nav aria-label="Breadcrumb" className="text-xs text-slate-500 flex items-center gap-2">
                 <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
-                  Accueil
+                  {tNav('home')}
                 </button>
                 <span>/</span>
                 <button type="button" onClick={() => navigate('/outils/')} className="hover:text-blue-600 cursor-pointer">
-                  Outils Gratuits
+                  {tNav('tools')}
                 </button>
                 <span>/</span>
-                <span className="font-semibold text-slate-900 dark:text-white">{tool.shortName}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{locTool.name}</span>
               </nav>
 
               <header className="max-w-3xl">
                 <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1.5">
-                  Outil Gratuit · {tool.category}
+                  {tTools('freeToolBadge')} · {tool.category}
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">
-                  {tool.name}
+                  {locTool.name}
                 </h1>
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {tool.summary}
+                  {locTool.summary}
                 </p>
               </header>
 
@@ -2027,7 +2198,7 @@ export default function App() {
                 <div className="lg:col-span-7 space-y-6">
                   <section className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                      Comment utiliser cet outil étape par étape ?
+                      {tTools('howToTitle')}
                     </h2>
                     <ol className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
                       {tool.howToSteps.map((step, idx) => (
@@ -2044,7 +2215,7 @@ export default function App() {
                   {tool.faq.length > 0 && (
                     <section className="space-y-3">
                       <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                        Questions fréquentes
+                        {tTools('faqTitle')}
                       </h2>
                       {tool.faq.map((f, i) => (
                         <div
@@ -2066,20 +2237,23 @@ export default function App() {
                 <div className="lg:col-span-5 space-y-4">
                   <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                     <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
-                      Autres outils gratuits {SITE_CONFIG.name}
+                      {tTools('otherToolsTitle')}
                     </h3>
                     <div className="space-y-2">
-                      {TOOLS.filter((t) => t.slug !== tool.slug).map((other) => (
-                        <button
-                          key={other.id}
-                          type="button"
-                          onClick={() => navigate(other.url)}
-                          className="w-full p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-left flex items-center justify-between text-xs sm:text-sm font-semibold cursor-pointer"
-                        >
-                          <span>{other.name}</span>
-                          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
-                        </button>
-                      ))}
+                      {TOOLS.filter((t) => t.slug !== tool.slug).map((other) => {
+                        const locOther = getLocalizedTool(other.id, other.name, other.summary);
+                        return (
+                          <button
+                            key={other.id}
+                            type="button"
+                            onClick={() => navigate(other.url)}
+                            className="w-full p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-600 text-start flex items-center justify-between text-xs sm:text-sm font-semibold cursor-pointer"
+                          >
+                            <span>{locOther.name}</span>
+                            <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 rtl:rotate-180" />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2094,12 +2268,12 @@ export default function App() {
         {route.type === 'about' && (
           <>
             <SeoHead
-              title={`À Propos de ${SITE_CONFIG.name} — Objectif, Philosophie et Équipe`}
-              description={`Découvrez la mission éditoriale de ${SITE_CONFIG.name} : tutoriels d'intelligence artificielle, programmation et outils numériques gratuits.`}
+              title={`${tNav('about')} — ${SITE_CONFIG.name}`}
+              description={tFooter('tagline')}
               path="/a-propos/"
               breadcrumbs={[
-                { name: 'Accueil', path: '/' },
-                { name: 'À Propos', path: '/a-propos/' },
+                { name: tNav('home'), path: '/' },
+                { name: tNav('about'), path: '/a-propos/' },
               ]}
             />
             <AboutPage onNavigate={navigate} />
@@ -2109,12 +2283,12 @@ export default function App() {
         {route.type === 'contact' && (
           <>
             <SeoHead
-              title={`Contactez ${SITE_CONFIG.name} — Formulaire et Support`}
-              description={`Contactez la rédaction de ${SITE_CONFIG.name} pour toute question technique, suggestion de guide ou signalement.`}
+              title={`${tNav('contact')} — ${SITE_CONFIG.name}`}
+              description={tFooter('tagline')}
               path="/contact/"
               breadcrumbs={[
-                { name: 'Accueil', path: '/' },
-                { name: 'Contact', path: '/contact/' },
+                { name: tNav('home'), path: '/' },
+                { name: tNav('contact'), path: '/contact/' },
               ]}
             />
             <ContactPage />
@@ -2126,12 +2300,12 @@ export default function App() {
             <SeoHead
               title={
                 route.subtype === 'confidentialite'
-                  ? `Politique de Confidentialité & Cookies AdSense | ${SITE_CONFIG.name}`
+                  ? `${tFooter('privacy')} | ${SITE_CONFIG.name}`
                   : route.subtype === 'mentions-legales'
-                  ? `Mentions Légales | ${SITE_CONFIG.name}`
-                  : `Conditions Générales d'Utilisation | ${SITE_CONFIG.name}`
+                  ? `${tFooter('legal')} | ${SITE_CONFIG.name}`
+                  : `${tFooter('terms')} | ${SITE_CONFIG.name}`
               }
-              description={`Informations légales et politique de confidentialité du portail ${SITE_CONFIG.name}.`}
+              description={tFooter('tagline')}
               path={`/${route.subtype}/`}
             />
             <LegalPage type={route.subtype} />
@@ -2142,109 +2316,103 @@ export default function App() {
       {/* PIED DE PAGE (FOOTER) */}
       <footer className="bg-black text-white border-t border-slate-900 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-b border-neutral-900">
+          {/* 1. Présentation TechIA Lab */}
           <div className="space-y-3">
             <div className="text-lg font-extrabold tracking-tight text-white">
               {SITE_CONFIG.name}
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              {SITE_CONFIG.slogan} {SITE_CONFIG.positioning}
+              {tFooter('tagline')}
             </p>
           </div>
 
+          {/* 2. Liens rapides / روابط سريعة */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-              Pôles Thématiques
+              {tFooter('quickLinks')}
             </h3>
             <ul className="space-y-2 text-xs text-neutral-300">
               <li>
-                <button type="button" onClick={() => navigate('/ia/')} className="hover:text-white cursor-pointer">
-                  Intelligence artificielle
+                <button type="button" onClick={() => navigate('/')} className="hover:text-white cursor-pointer">
+                  {tNav('home')}
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/chatgpt/')} className="hover:text-white cursor-pointer">
-                  ChatGPT & Google Gemini
+                <button type="button" onClick={() => navigate('/guides/')} className="hover:text-white cursor-pointer">
+                  {tNav('articles')}
                 </button>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/python/')} className="hover:text-white cursor-pointer">
-                  Programmation Python & JS
+                <button type="button" onClick={() => navigate('/outils/')} className="hover:text-white cursor-pointer">
+                  {tNav('tools')}
                 </button>
               </li>
-              <li>
-                <button type="button" onClick={() => navigate('/kdp/')} className="hover:text-white cursor-pointer">
-                  Kindle & Amazon KDP
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigate('/automatisation/')} className="hover:text-white cursor-pointer">
-                  Automatisation & Freelance
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-              Outils Gratuits Populaires
-            </h3>
-            <ul className="space-y-2 text-xs text-neutral-300">
-              <li>
-                <button type="button" onClick={() => navigate('/outils/pdf-vers-images/')} className="hover:text-white cursor-pointer">
-                  PDF vers Images (PNG/WebP)
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigate('/outils/fusionner-pdf/')} className="hover:text-white cursor-pointer">
-                  Fusionner & Compresser PDF
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigate('/outils/qr-code/')} className="hover:text-white cursor-pointer">
-                  Générateur de QR Code
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigate('/outils/compteur-de-mots/')} className="hover:text-white cursor-pointer">
-                  Compteur de Mots SEO
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => navigate('/outils/calculateur/')} className="hover:text-white cursor-pointer">
-                  Calculateur TJM & KDP
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-              Informations & Conformité
-            </h3>
-            <ul className="space-y-2 text-xs text-neutral-300">
               <li>
                 <button type="button" onClick={() => navigate('/a-propos/')} className="hover:text-white cursor-pointer">
-                  À propos
+                  {tNav('about')}
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigate('/contact/')} className="hover:text-white cursor-pointer">
-                  Contact ({SITE_CONFIG.contactEmail})
+                  {tNav('contact')}
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* 3. Catégories / التصنيفات */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+              {tFooter('categoriesCol')}
+            </h3>
+            <ul className="space-y-2 text-xs text-neutral-300">
+              <li>
+                <button type="button" onClick={() => navigate('/ia/')} className="hover:text-white cursor-pointer">
+                  {tCategories('ai')}
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/programmation/')} className="hover:text-white cursor-pointer">
+                  {tCategories('tech')}
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/kdp/')} className="hover:text-white cursor-pointer">
+                  {tCategories('money')}
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => navigate('/guides/')} className="hover:text-white cursor-pointer">
+                  {tCategories('tutorials')}
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* 4. Suivez-nous / تابعنا & Conformité */}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
+              {tFooter('followUs')}
+            </h3>
+            <ul className="space-y-2 text-xs text-neutral-300">
+              <li>
+                <button type="button" onClick={() => navigate('/contact/')} className="hover:text-white cursor-pointer">
+                  {SITE_CONFIG.contactEmail}
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigate('/confidentialite/')} className="hover:text-white cursor-pointer">
-                  Politique de confidentialité
+                  {tFooter('privacy')}
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigate('/mentions-legales/')} className="hover:text-white cursor-pointer">
-                  Mentions légales
+                  {tFooter('legal')}
                 </button>
               </li>
               <li>
                 <button type="button" onClick={() => navigate('/conditions-utilisation/')} className="hover:text-white cursor-pointer">
-                  Conditions d’utilisation
+                  {tFooter('terms')}
                 </button>
               </li>
             </ul>
@@ -2253,7 +2421,7 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-4 py-6 text-center">
           <p className="text-xs text-neutral-400 tracking-wide">
-            © 2026 Mahfoud - Tous droits réservés | {SITE_CONFIG.name}
+            {tFooter('copyright')}
           </p>
         </div>
       </footer>
@@ -2262,13 +2430,12 @@ export default function App() {
       {!cookiesAccepted && (
         <div
           role="region"
-          aria-label="Consentement aux cookies"
+          aria-label="Cookies"
           className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 text-white border-t border-slate-800 px-4 py-3"
         >
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p className="text-slate-300 text-center sm:text-left">
-              Ce site utilise Google AdSense Auto Ads et des cookies pour mesurer
-              l’audience et améliorer votre expérience de navigation.
+            <p className="text-slate-300 text-center sm:text-start">
+              {tFooter('cookieText')}
             </p>
             <div className="flex items-center gap-3 shrink-0">
               <button
@@ -2276,14 +2443,14 @@ export default function App() {
                 onClick={() => navigate('/confidentialite/')}
                 className="text-slate-400 hover:text-white underline cursor-pointer"
               >
-                Politique de confidentialité
+                {tFooter('privacy')}
               </button>
               <button
                 type="button"
                 onClick={handleAcceptCookies}
                 className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold cursor-pointer"
               >
-                J’accepte
+                {tFooter('cookieAccept')}
               </button>
             </div>
           </div>

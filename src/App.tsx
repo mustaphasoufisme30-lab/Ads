@@ -292,11 +292,7 @@ export default function App() {
           >
             MAHFOUD
           </a>
-         {/* PUB ADSENSE DEBUT */}
-<div style={{ textAlign: 'center', margin: '20px 0' }}>
-  {/* Mets ici ton code AdSense */}
-</div>
-{/* FIN PUB ADSENSE */} 
+        
 
           {/* Zone 2: 4 concise single-line navigation links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">

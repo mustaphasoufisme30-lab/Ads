@@ -480,8 +480,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 3. PUB ADSENSE 1 */}
-        <AdSenseUnit id="adsense-1" />
+
 
         {/* 4. CE QUE TU REÇOIS : 6 MODULES */}
         <section

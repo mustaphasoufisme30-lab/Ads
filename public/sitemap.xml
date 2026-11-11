@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Pages Principales -->
-  <url><loc>https://mahfoud.xyz/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://mahfoud.xyz/ia/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/programmation/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/python/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/kdp/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/guides/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mahfoud.xyz/a-propos/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://mahfoud.xyz/contact/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://mahfoud.xyz/confidentialite/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://mahfoud.xyz/mentions-legales/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://mahfoud.xyz/conditions-utilisation/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mahfoud.xyz/</loc><lastmod>2026-11-09</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://mahfoud.xyz/ia/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/programmation/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/python/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/kdp/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/guides/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mahfoud.xyz/a-propos/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mahfoud.xyz/contact/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mahfoud.xyz/confidentialite/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mahfoud.xyz/mentions-legales/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mahfoud.xyz/conditions-utilisation/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
 
   <!-- 15 Catégories -->
-  <url><loc>https://mahfoud.xyz/chatgpt/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/google-ai-gemini/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/canva-creation/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/php/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/javascript/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/creation-sites-web/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/applications-android/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/outils-pdf/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/outils-en-ligne/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/automatisation/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/freelance-revenus-numeriques/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/chatgpt/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/google-ai-gemini/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/canva-creation/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/php/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/javascript/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/creation-sites-web/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/applications-android/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/outils-pdf/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/outils-en-ligne/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/automatisation/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/freelance-revenus-numeriques/</loc><lastmod>2026-11-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 
   <!-- 9 Outils Gratuits -->
-  <url><loc>https://mahfoud.xyz/outils/pdf-vers-images/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/images-vers-pdf/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/fusionner-pdf/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/compresser-pdf/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/qr-code/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/compteur-de-mots/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/generateur-mot-de-passe/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/convertisseur-unites/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
-  <url><loc>https://mahfoud.xyz/outils/calculateur/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/pdf-vers-images/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/images-vers-pdf/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/fusionner-pdf/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/compresser-pdf/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/qr-code/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/compteur-de-mots/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/generateur-mot-de-passe/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/convertisseur-unites/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://mahfoud.xyz/outils/calculateur/</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.85</priority></url>
 
-  <!-- 10 Articles Initiaux -->
-  <url><loc>https://mahfoud.xyz/article/comment-utiliser-chatgpt-pour-apprendre-la-programmation</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-creer-une-application-web-avec-l-intelligence-artificielle</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-creer-une-application-python</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-transformer-une-idee-en-application-web</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/les-meilleurs-outils-ia-pour-creer-du-contenu</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-creer-un-livre-kindle-avec-canva</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-convertir-un-pdf-en-differents-formats</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-creer-un-site-web-avec-l-ia</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/python-guide-pour-debutants</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://mahfoud.xyz/article/comment-automatiser-une-tache-avec-l-ia</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <!-- 10 Articles Complets -->
+  <url><loc>https://mahfoud.xyz/article/comment-utiliser-chatgpt-pour-apprendre-la-programmation</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-creer-une-application-web-avec-l-intelligence-artificielle</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-creer-une-application-python</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-transformer-une-idee-en-application-web</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/les-meilleurs-outils-ia-pour-creer-du-contenu</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-creer-un-livre-kindle-avec-canva</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-convertir-un-pdf-en-differents-formats</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-creer-un-site-web-avec-l-ia</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/python-guide-pour-debutants</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mahfoud.xyz/article/comment-automatiser-une-tache-avec-l-ia</loc><lastmod>2026-11-09</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>

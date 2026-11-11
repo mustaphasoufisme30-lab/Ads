@@ -65,6 +65,7 @@ const SafeImage: React.FC<{
       width={800}
       height={450}
       loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
       referrerPolicy="no-referrer"
       onError={() => setError(true)}
       className={className}
@@ -166,6 +167,7 @@ const ArticleCard: React.FC<{
   onNavigate: (path: string) => void;
   index?: number;
 }> = ({ article, onNavigate, index = 0 }) => {
+  const { locale } = useLocale();
   const tHome = useTranslations('home');
   const tArticles = useTranslations('articles');
 
@@ -177,6 +179,7 @@ const ArticleCard: React.FC<{
   const localizedTitle = tArticles(titleKey) || article.title;
   const localizedExcerpt = tArticles(excerptKey) || article.excerpt;
   const localizedCategory = tArticles(catKey) || article.categoryName;
+  const descriptiveAlt = locale === 'fr' ? article.imageAlt : localizedTitle;
 
   return (
     <motion.article
@@ -195,38 +198,52 @@ const ArticleCard: React.FC<{
       className="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-shadow duration-200 overflow-hidden flex flex-col justify-between"
     >
       <div>
-        <div
-          onClick={() => onNavigate(article.url)}
-          className="aspect-16/9 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer"
+        <a
+          href={article.url}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(article.url);
+          }}
+          aria-label={localizedTitle}
+          className="block aspect-16/9 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer"
         >
           <SafeImage
             src={article.image}
-            alt={localizedTitle}
+            alt={descriptiveAlt}
             className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
           />
-        </div>
+        </a>
 
         <div className="p-5 sm:p-6">
           {/* Clean unboxed metadata per Zero-Pill Discipline */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2.5">
-            <button
-              type="button"
-              onClick={() => onNavigate(`/${article.categorySlug}/`)}
+            <a
+              href={`/${article.categorySlug}/`}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate(`/${article.categorySlug}/`);
+              }}
               className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
             >
               {localizedCategory}
-            </button>
+            </a>
             <span aria-hidden="true">·</span>
             <span>{article.date}</span>
             <span aria-hidden="true">·</span>
             <span className="font-mono tabular-nums">{article.readTime}</span>
           </div>
 
-          <h3
-            onClick={() => onNavigate(article.url)}
-            className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug mb-2.5"
-          >
-            {localizedTitle}
+          <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug mb-2.5">
+            <a
+              href={article.url}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate(article.url);
+              }}
+              className="cursor-pointer"
+            >
+              {localizedTitle}
+            </a>
           </h3>
 
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
@@ -239,14 +256,17 @@ const ArticleCard: React.FC<{
         <span className="text-xs text-slate-500 dark:text-slate-400">
           {article.isCompleteGuide ? tHome('completeGuideLabel') : tHome('tutorialLabel')}
         </span>
-        <button
-          type="button"
-          onClick={() => onNavigate(article.url)}
+        <a
+          href={article.url}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(article.url);
+          }}
           className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap shrink-0 cursor-pointer"
         >
           <span>{tHome('readMore')}</span>
           <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-        </button>
+        </a>
       </div>
     </motion.article>
   );
@@ -606,7 +626,17 @@ export default function App() {
   const featuredArt = getLocalizedArticle(ARTICLES[0]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="relative min-h-screen flex flex-col bg-gradient-to-br from-[#EEF2FF] via-[#F4F7FB] to-[#E0F2FE] dark:from-[#050914] dark:via-[#0B1120] dark:to-[#0F172A] text-slate-900 dark:text-slate-100 selection:bg-blue-600 selection:text-white">
+      {/* Décor d'arrière-plan stylé : Halos lumineux doux & grille subtile */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      >
+        <div className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-blue-500/12 dark:bg-blue-500/15 blur-3xl" />
+        <div className="absolute top-1/4 -right-32 w-[26rem] h-[26rem] rounded-full bg-indigo-500/10 dark:bg-indigo-500/12 blur-3xl" />
+        <div className="absolute -bottom-32 left-1/3 w-[24rem] h-[24rem] rounded-full bg-sky-400/10 dark:bg-sky-500/10 blur-3xl" />
+      </div>
+
       {/* ANIMATION DE CHARGEMENT : Petit logo qui tourne quand la page charge */}
       <AnimatePresence>
         {isPageLoading && (
@@ -615,7 +645,7 @@ export default function App() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-xs"
+            className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center bg-[#F4F7FB]/80 dark:bg-[#060B19]/80 backdrop-blur-xs"
             aria-label="TechIA Lab"
           >
             <div className="flex flex-col items-center gap-3 px-6 py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
@@ -638,8 +668,8 @@ export default function App() {
       <header
         className={`sticky top-0 z-40 h-16 transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-md border-b border-slate-200/80 dark:border-slate-800/80'
-            : 'bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800'
+            ? 'bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur-md shadow-md border-b border-indigo-100 dark:border-slate-800/80'
+            : 'bg-white/70 dark:bg-[#0B1120]/70 backdrop-blur-xs border-b border-indigo-100/80 dark:border-slate-800/80'
         }`}
       >
         <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4">
@@ -669,18 +699,41 @@ export default function App() {
             className="hidden lg:flex items-center gap-7 text-sm font-semibold"
           >
             {[
-              { label: tNav('home'), path: '/' },
-              { label: tNav('articles'), path: '/guides/' },
-              { label: tNav('tools'), path: '/outils/' },
-              { label: tNav('about'), path: '/a-propos' },
-              { label: tNav('contact'), path: '/contact' },
+              { label: tNav('home'), path: '/', external: false },
+              { label: tNav('articles'), path: '/guides/', external: false },
+              { label: tNav('tools'), path: '/outils/', external: false },
+              {
+                label: tNav('digitalProducts'),
+                path: locale === 'ar' ? 'https://mahfoud.xyz' : 'https://laboutique.cfd',
+                external: true,
+              },
+              { label: tNav('about'), path: '/a-propos', external: false },
+              { label: tNav('contact'), path: '/contact', external: false },
             ].map((item) => {
-              const isActive =
-                item.path === '/'
+              const isActive = item.external
+                ? false
+                : item.path === '/'
                   ? currentPath === '/'
                   : item.path === '/guides/'
                     ? currentPath.startsWith('/guides') || currentPath.startsWith('/article/')
                     : currentPath.startsWith(item.path.replace(/\/$/, ''));
+
+              if (item.external) {
+                return (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative py-1.5 transition-colors duration-200 whitespace-nowrap shrink-0 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1"
+                  >
+                    <span>{item.label}</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                    <span className="absolute left-0 bottom-0 h-0.5 w-full bg-blue-600 dark:bg-blue-400 rounded-full origin-left transition-transform duration-300 ease-out scale-x-0 group-hover:scale-x-100" />
+                  </a>
+                );
+              }
+
               return (
                 <a
                   key={item.path}
@@ -830,20 +883,51 @@ export default function App() {
                 {/* Liens principaux apparaissant un par un */}
                 <nav className="flex flex-col space-y-1.5">
                   {[
-                    { label: tNav('home'), path: '/' },
-                    { label: tNav('articles'), path: '/guides/' },
-                    { label: tNav('tools'), path: '/outils/' },
-                    { label: tNav('ai'), path: '/ia/' },
-                    { label: tNav('technology'), path: '/programmation/' },
-                    { label: tNav('earnMoney'), path: '/kdp/' },
-                    { label: tNav('tutorials'), path: '/outils-pdf/' },
-                    { label: tNav('about'), path: '/a-propos' },
-                    { label: tNav('contact'), path: '/contact' },
+                    { label: tNav('home'), path: '/', external: false },
+                    { label: tNav('articles'), path: '/guides/', external: false },
+                    { label: tNav('tools'), path: '/outils/', external: false },
+                    {
+                      label: tNav('digitalProducts'),
+                      path: locale === 'ar' ? 'https://mahfoud.xyz' : 'https://laboutique.cfd',
+                      external: true,
+                    },
+                    { label: tNav('ai'), path: '/ia/', external: false },
+                    { label: tNav('technology'), path: '/programmation/', external: false },
+                    { label: tNav('earnMoney'), path: '/kdp/', external: false },
+                    { label: tNav('tutorials'), path: '/outils-pdf/', external: false },
+                    { label: tNav('about'), path: '/a-propos', external: false },
+                    { label: tNav('contact'), path: '/contact', external: false },
                   ].map((item, idx) => {
-                    const isActive =
-                      item.path === '/'
+                    const isActive = item.external
+                      ? false
+                      : item.path === '/'
                         ? currentPath === '/'
                         : currentPath.startsWith(item.path.replace(/\/$/, ''));
+
+                    if (item.external) {
+                      return (
+                        <motion.a
+                          key={item.path}
+                          href={item.path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMobileMenuOpen(false)}
+                          initial={{ opacity: 0, x: 24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 16 }}
+                          transition={{
+                            duration: 0.28,
+                            delay: 0.05 + idx * 0.05,
+                            ease: 'easeOut',
+                          }}
+                          className="w-full px-4 py-3 rounded-xl text-start text-sm font-bold flex items-center justify-between transition-colors cursor-pointer text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-blue-600"
+                        >
+                          <span>{item.label}</span>
+                          <ExternalLink className="w-4 h-4 opacity-60" />
+                        </motion.a>
+                      );
+                    }
+
                     return (
                       <motion.button
                         key={item.path}
@@ -1063,16 +1147,26 @@ export default function App() {
       )}
 
       {/* CONTENU PRINCIPAL SELON LA ROUTE */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6">
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6">
         {/* ====================================================================
             ROUTE 1 : PAGE D'ACCUEIL (/)
            ==================================================================== */}
         {route.type === 'home' && (
           <>
             <SeoHead
-              title={`${SITE_CONFIG.name} — ${tHome('welcome')}`}
-              description={tHome('heroSubtitle')}
+              title={
+                locale === 'ar'
+                  ? `${SITE_CONFIG.name} — ${tHome('welcome')} | الذكاء الاصطناعي والتكنولوجيا`
+                  : `${SITE_CONFIG.name} — Tutoriels Intelligence Artificielle, Programmation Python & Outils Gratuits`
+              }
+              description={
+                locale === 'ar'
+                  ? tHome('heroSubtitle')
+                  : "Découvrez sur TechIA Lab des guides pratiques sur l'Intelligence Artificielle (ChatGPT, Gemini), la programmation Python et Web, Amazon KDP et 9 outils gratuits en ligne."
+              }
               path="/"
+              image={ARTICLES[0].image}
+              imageAlt={locale === 'fr' ? ARTICLES[0].imageAlt : featuredArt.title}
               breadcrumbs={[{ name: tNav('home'), path: '/' }]}
             />
 
@@ -1708,11 +1802,12 @@ export default function App() {
           return (
             <div className="py-8 sm:py-12">
               <SeoHead
-                title={locArt.title}
-                description={locArt.excerpt}
+                title={locale === 'fr' ? article.seoTitle : `${locArt.title} | ${SITE_CONFIG.name}`}
+                description={locale === 'fr' ? article.metaDescription : locArt.excerpt}
                 path={article.url}
                 type="article"
                 image={article.image}
+                imageAlt={locale === 'fr' ? article.imageAlt : locArt.title}
                 articleData={{
                   author: article.author,
                   datePublished: article.date,
@@ -1729,17 +1824,27 @@ export default function App() {
 
               {/* Fil d'Ariane */}
               <nav aria-label="Breadcrumb" className="text-xs text-slate-500 mb-6 flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => navigate('/')} className="hover:text-blue-600 cursor-pointer">
+                <a
+                  href="/"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/');
+                  }}
+                  className="hover:text-blue-600 cursor-pointer"
+                >
                   {tNav('home')}
-                </button>
+                </a>
                 <span>/</span>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/${article.categorySlug}/`)}
+                <a
+                  href={`/${article.categorySlug}/`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/${article.categorySlug}/`);
+                  }}
                   className="hover:text-blue-600 cursor-pointer"
                 >
                   {locArt.categoryName}
-                </button>
+                </a>
                 <span>/</span>
                 <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-xs sm:max-w-md">
                   {locArt.title}
@@ -1756,13 +1861,16 @@ export default function App() {
                     className="space-y-4"
                   >
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/${article.categorySlug}/`)}
+                      <a
+                        href={`/${article.categorySlug}/`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/${article.categorySlug}/`);
+                        }}
                         className="font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                       >
                         {locArt.categoryName}
-                      </button>
+                      </a>
                       <span aria-hidden="true">·</span>
                       <span>{tArticles('by')} {article.author}</span>
                       <span aria-hidden="true">·</span>
@@ -1787,7 +1895,7 @@ export default function App() {
                   <div className="aspect-16/9 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
                     <SafeImage
                       src={article.image}
-                      alt={locArt.title}
+                      alt={locale === 'fr' ? article.imageAlt : locArt.title}
                       eager
                       className="w-full h-full object-cover"
                     />
@@ -2314,7 +2422,7 @@ export default function App() {
       </main>
 
       {/* PIED DE PAGE (FOOTER) */}
-      <footer className="bg-black text-white border-t border-slate-900 mt-16">
+      <footer className="relative z-10 bg-black text-white border-t border-slate-900 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-b border-neutral-900">
           {/* 1. Présentation TechIA Lab */}
           <div className="space-y-3">
@@ -2333,29 +2441,29 @@ export default function App() {
             </h3>
             <ul className="space-y-2 text-xs text-neutral-300">
               <li>
-                <button type="button" onClick={() => navigate('/')} className="hover:text-white cursor-pointer">
+                <a href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }} className="hover:text-white cursor-pointer">
                   {tNav('home')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/guides/')} className="hover:text-white cursor-pointer">
+                <a href="/guides/" onClick={(e) => { e.preventDefault(); navigate('/guides/'); }} className="hover:text-white cursor-pointer">
                   {tNav('articles')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/outils/')} className="hover:text-white cursor-pointer">
+                <a href="/outils/" onClick={(e) => { e.preventDefault(); navigate('/outils/'); }} className="hover:text-white cursor-pointer">
                   {tNav('tools')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/a-propos/')} className="hover:text-white cursor-pointer">
+                <a href="/a-propos/" onClick={(e) => { e.preventDefault(); navigate('/a-propos/'); }} className="hover:text-white cursor-pointer">
                   {tNav('about')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/contact/')} className="hover:text-white cursor-pointer">
+                <a href="/contact/" onClick={(e) => { e.preventDefault(); navigate('/contact/'); }} className="hover:text-white cursor-pointer">
                   {tNav('contact')}
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -2367,24 +2475,24 @@ export default function App() {
             </h3>
             <ul className="space-y-2 text-xs text-neutral-300">
               <li>
-                <button type="button" onClick={() => navigate('/ia/')} className="hover:text-white cursor-pointer">
+                <a href="/ia/" onClick={(e) => { e.preventDefault(); navigate('/ia/'); }} className="hover:text-white cursor-pointer">
                   {tCategories('ai')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/programmation/')} className="hover:text-white cursor-pointer">
+                <a href="/programmation/" onClick={(e) => { e.preventDefault(); navigate('/programmation/'); }} className="hover:text-white cursor-pointer">
                   {tCategories('tech')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/kdp/')} className="hover:text-white cursor-pointer">
+                <a href="/kdp/" onClick={(e) => { e.preventDefault(); navigate('/kdp/'); }} className="hover:text-white cursor-pointer">
                   {tCategories('money')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/guides/')} className="hover:text-white cursor-pointer">
+                <a href="/guides/" onClick={(e) => { e.preventDefault(); navigate('/guides/'); }} className="hover:text-white cursor-pointer">
                   {tCategories('tutorials')}
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -2396,24 +2504,24 @@ export default function App() {
             </h3>
             <ul className="space-y-2 text-xs text-neutral-300">
               <li>
-                <button type="button" onClick={() => navigate('/contact/')} className="hover:text-white cursor-pointer">
+                <a href="/contact/" onClick={(e) => { e.preventDefault(); navigate('/contact/'); }} className="hover:text-white cursor-pointer">
                   {SITE_CONFIG.contactEmail}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/confidentialite/')} className="hover:text-white cursor-pointer">
+                <a href="/confidentialite/" onClick={(e) => { e.preventDefault(); navigate('/confidentialite/'); }} className="hover:text-white cursor-pointer">
                   {tFooter('privacy')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/mentions-legales/')} className="hover:text-white cursor-pointer">
+                <a href="/mentions-legales/" onClick={(e) => { e.preventDefault(); navigate('/mentions-legales/'); }} className="hover:text-white cursor-pointer">
                   {tFooter('legal')}
-                </button>
+                </a>
               </li>
               <li>
-                <button type="button" onClick={() => navigate('/conditions-utilisation/')} className="hover:text-white cursor-pointer">
+                <a href="/conditions-utilisation/" onClick={(e) => { e.preventDefault(); navigate('/conditions-utilisation/'); }} className="hover:text-white cursor-pointer">
                   {tFooter('terms')}
-                </button>
+                </a>
               </li>
             </ul>
           </div>

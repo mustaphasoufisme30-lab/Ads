@@ -9,6 +9,11 @@
 
   body {
     font-family: var(--font-sans);
+    background-color: #f4f7fb;
+  }
+
+  .dark body {
+    background-color: #060b19;
   }
 
   h1, h2, h3, h4 {

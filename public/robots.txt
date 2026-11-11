@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
 
+# Googlebot & Googlebot-Image
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
 # Google AdSense Crawler
 User-agent: Mediapartners-Google
 Allow: /

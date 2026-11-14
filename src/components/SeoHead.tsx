@@ -90,8 +90,8 @@ export const SeoHead: React.FC<SeoProps> = ({
     setMeta('meta[property="og:site_name"]', 'property', 'og:site_name', SITE_CONFIG.name);
     setMeta('meta[property="og:locale"]', 'property', 'og:locale', locale === 'ar' ? 'ar_AR' : 'fr_FR');
     setMeta('meta[property="og:image"]', 'property', 'og:image', fullImgUrl);
-    setMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '1200');
-    setMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '675');
+    setMeta('meta[property="og:image:width"]', 'property', 'og:image:width', '800');
+    setMeta('meta[property="og:image:height"]', 'property', 'og:image:height', '450');
     setMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', resolvedImageAlt);
 
     // Twitter / X Cards

@@ -24,23 +24,27 @@ interface IntlContextValue {
 }
 
 const IntlContext = createContext<IntlContextValue>({
-  locale: 'fr',
+  locale: 'ar',
   setLocale: () => {},
-  messages: frMessages,
+  messages: arMessages,
 });
 
-export const NextIntlClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default language is always FRENCH ('fr') if the user has never chosen
+export const NextIntlClientProvider: React.FC<{
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}> = ({ children, initialLocale }) => {
+  // Default language is Arabic ('ar' / RTL) unless the user saved 'fr'
   const [locale, setLocaleState] = useState<Locale>(() => {
+    if (initialLocale) return initialLocale;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'ar' || saved === 'fr') {
+      if (saved === 'fr' || saved === 'ar') {
         return saved;
       }
     } catch {
-      // Fallback to French if storage is restricted
+      // Fallback to Arabic if storage is restricted
     }
-    return 'fr';
+    return 'ar';
   });
 
   const setLocale = useCallback((next: Locale) => {
@@ -64,7 +68,7 @@ export const NextIntlClientProvider: React.FC<{ children: React.ReactNode }> = (
       value={{
         locale,
         setLocale,
-        messages: MESSAGES_MAP[locale] || frMessages,
+        messages: MESSAGES_MAP[locale] || arMessages,
       }}
     >
       {children}

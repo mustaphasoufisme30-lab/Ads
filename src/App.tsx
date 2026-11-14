@@ -35,13 +35,12 @@ import { InteractiveToolWidget } from './components/InteractiveTools';
 import { AboutPage, ContactPage, LegalPage } from './components/StaticPages';
 import { useLocale, useTranslations } from './i18n/next-intl';
 
-// Resilient image component with fallback and explicit dimensions
+// Resilient image component with WebP support, lazy loading, and explicit dimensions
 const SafeImage: React.FC<{
   src: string;
   alt: string;
   className?: string;
-  eager?: boolean;
-}> = ({ src, alt, className = '', eager = false }) => {
+}> = ({ src, alt, className = '' }) => {
   const [error, setError] = useState(false);
 
   if (error) {
@@ -58,18 +57,23 @@ const SafeImage: React.FC<{
     );
   }
 
+  const webpSrc = src.endsWith('.jpg') ? src.replace(/\.jpg$/, '.webp') : null;
+
   return (
-    <img
-      src={src}
-      alt={alt}
-      width={800}
-      height={450}
-      loading={eager ? 'eager' : 'lazy'}
-      decoding="async"
-      referrerPolicy="no-referrer"
-      onError={() => setError(true)}
-      className={className}
-    />
+    <picture className="block w-full h-full">
+      {webpSrc && <source srcSet={webpSrc} type="image/webp" />}
+      <img
+        src={src}
+        alt={alt}
+        width={800}
+        height={450}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={() => setError(true)}
+        className={className}
+      />
+    </picture>
   );
 };
 
@@ -183,14 +187,6 @@ const ArticleCard: React.FC<{
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.12 }}
-      transition={{
-        duration: 0.45,
-        delay: (index % 4) * 0.1,
-        ease: [0.22, 1, 0.36, 1],
-      }}
       whileHover={{
         y: -5,
         transition: { duration: 0.2, ease: 'easeOut' },
@@ -272,7 +268,11 @@ const ArticleCard: React.FC<{
   );
 };
 
-export default function App() {
+export interface AppProps {
+  initialPath?: string;
+}
+
+export default function App({ initialPath }: AppProps) {
   const { locale, setLocale } = useLocale();
   const tNav = useTranslations('nav');
   const tHome = useTranslations('home');
@@ -344,6 +344,7 @@ export default function App() {
   };
 
   const [currentPath, setCurrentPath] = useState<string>(() => {
+    if (initialPath) return initialPath;
     if (typeof window !== 'undefined') {
       return window.location.pathname || '/';
     }
@@ -371,7 +372,7 @@ export default function App() {
       return false;
     }
   });
-  const [isPageLoading, setIsPageLoading] = useState<boolean>(true);
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
   // Detect scroll for sticky header blur + shadow effect
@@ -382,12 +383,6 @@ export default function App() {
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Initial page load spinning logo animation
-  useEffect(() => {
-    const timer = setTimeout(() => setIsPageLoading(false), 450);
-    return () => clearTimeout(timer);
   }, []);
 
   // Sync dark mode class on <html>
@@ -1156,13 +1151,13 @@ export default function App() {
             <SeoHead
               title={
                 locale === 'ar'
-                  ? `${SITE_CONFIG.name} — ${tHome('welcome')} | الذكاء الاصطناعي والتكنولوجيا`
-                  : `${SITE_CONFIG.name} — Tutoriels Intelligence Artificielle, Programmation Python & Outils Gratuits`
+                  ? 'TechIA Lab — دورات الذكاء الاصطناعي وبايثون'
+                  : 'Formations IA, Python & Outils Gratuits | TechIA Lab'
               }
               description={
                 locale === 'ar'
-                  ? tHome('heroSubtitle')
-                  : "Découvrez sur TechIA Lab des guides pratiques sur l'Intelligence Artificielle (ChatGPT, Gemini), la programmation Python et Web, Amazon KDP et 9 outils gratuits en ligne."
+                  ? 'تعلّم الذكاء الاصطناعي وبايثون بخطوات مبسطة واستفد من 9 أدوات رقمية مجانية في متصفحك بدون تسجيل على TechIA Lab.'
+                  : "Apprenez l'IA et Python pas à pas et utilisez 9 outils numériques gratuits en ligne sans inscription sur TechIA Lab."
               }
               path="/"
               image={ARTICLES[0].image}
@@ -1173,12 +1168,7 @@ export default function App() {
             {/* 1. HERO SECTION */}
             <section className="py-10 sm:py-16 border-b border-slate-200 dark:border-slate-800">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
-                <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                  className="lg:col-span-7 flex flex-col justify-between"
-                >
+                <div className="lg:col-span-7 flex flex-col justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400 mb-4">
                       <span className="font-bold text-blue-600 dark:text-blue-400">
@@ -1190,15 +1180,12 @@ export default function App() {
                       <span>{tHome('badgeTools')}</span>
                     </div>
 
-                    <motion.h1
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    <h1
                       className="font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.08] mb-5"
-                      style={{ fontSize: 'clamp(2.25rem, 4vw, 3.5rem)' }}
+                      style={{ fontSize: 'clamp(2.1rem, 4vw, 3.35rem)' }}
                     >
                       {tHome('heroTitle')}
-                    </motion.h1>
+                    </h1>
 
                     <p className="text-base sm:text-xl text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mb-4">
                       {tHome('heroSubtitle')}
@@ -1245,12 +1232,9 @@ export default function App() {
                       <span>{tHome('secondaryCta')}</span>
                     </button>
                   </div>
-                </motion.div>
+                </div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                   className="lg:col-span-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 p-6 sm:p-7 flex flex-col justify-between text-white shadow-sm hover:shadow-xl hover:shadow-slate-900/20 transition-shadow duration-200"
                 >
@@ -1303,6 +1287,42 @@ export default function App() {
                     </button>
                   </div>
                 </motion.div>
+              </div>
+            </section>
+
+            {/* 1B. SECTION ÉDITORIALE VISIBLE (300+ MOTS SUR LES FORMATIONS IA, PYTHON ET OUTILS GRATUITS) */}
+            <section
+              aria-labelledby="home-seo-guide-title"
+              className="py-10 sm:py-14 border-b border-slate-200 dark:border-slate-800"
+            >
+              <div className="rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
+                <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1.5">
+                  {tHome('seoGuideBadge')}
+                </div>
+                <h2
+                  id="home-seo-guide-title"
+                  className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6"
+                >
+                  {tHome('seoGuideTitle')}
+                </h2>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      {tHome('seoGuideSub1')}
+                    </h3>
+                    <p>{tHome('seoGuideP1')}</p>
+                    <p>{tHome('seoGuideP2')}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      {tHome('seoGuideSub2')}
+                    </h3>
+                    <p>{tHome('seoGuideP3')}</p>
+                    <p>{tHome('seoGuideP4')}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1443,10 +1463,6 @@ export default function App() {
                   return (
                     <motion.div
                       key={tool.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.12 }}
-                      transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
                       whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                       onClick={() => navigate(tool.url)}
                       className="group p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 dark:hover:border-blue-500 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
@@ -1512,13 +1528,9 @@ export default function App() {
                     path: '/article/comment-creer-un-site-web-avec-l-ia',
                     tag: tHome('guide4Tag'),
                   },
-                ].map((guide, idx) => (
+                ].map((guide) => (
                   <motion.div
                     key={guide.path}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.12 }}
-                    transition={{ duration: 0.4, delay: (idx % 2) * 0.1, ease: 'easeOut' }}
                     whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                     onClick={() => navigate(guide.path)}
                     className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"
@@ -1669,12 +1681,7 @@ export default function App() {
               </nav>
 
               {/* En-tête Catégorie avec Fiche Thématique */}
-              <motion.header
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-10"
-              >
+              <header className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-10">
                 <div className="lg:col-span-7 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
                     <Layers className="w-4 h-4" />
@@ -1726,7 +1733,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-              </motion.header>
+              </header>
 
               {/* Contenu principal + Sidebar */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -1854,12 +1861,7 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Colonne Principale de l'Article */}
                 <article className="lg:col-span-8 space-y-8">
-                  <motion.header
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="space-y-4"
-                  >
+                  <header className="space-y-4">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <a
                         href={`/${article.categorySlug}/`}
@@ -1889,14 +1891,13 @@ export default function App() {
                     <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium leading-relaxed">
                       {locArt.excerpt}
                     </p>
-                  </motion.header>
+                  </header>
 
                   {/* Image Principale */}
                   <div className="aspect-16/9 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
                     <SafeImage
                       src={article.image}
                       alt={locale === 'fr' ? article.imageAlt : locArt.title}
-                      eager
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -2195,12 +2196,7 @@ export default function App() {
               ]}
             />
 
-            <motion.header
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-3xl"
-            >
+            <header className="max-w-3xl">
               <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
                 {tTools('hubBadge')}
               </div>
@@ -2210,18 +2206,14 @@ export default function App() {
               <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
                 {tTools('hubDesc')}
               </p>
-            </motion.header>
+            </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {TOOLS.map((tool, idx) => {
+              {TOOLS.map((tool) => {
                 const locTool = getLocalizedTool(tool.id, tool.name, tool.summary);
                 return (
                   <motion.article
                     key={tool.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.12 }}
-                    transition={{ duration: 0.4, delay: (idx % 3) * 0.08, ease: 'easeOut' }}
                     whileHover={{ y: -5, transition: { duration: 0.2, ease: 'easeOut' } }}
                     onClick={() => navigate(tool.url)}
                     className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-600 shadow-xs hover:shadow-xl hover:shadow-slate-900/10 dark:hover:shadow-black/50 transition-all duration-200 cursor-pointer flex flex-col justify-between"

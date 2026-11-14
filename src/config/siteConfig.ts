@@ -13,8 +13,8 @@ export const SITE_CONFIG = {
   slogan: 'IA, programmation et outils numériques expliqués simplement.',
   positioning:
     "Des guides simples et pratiques pour utiliser l'intelligence artificielle, créer des applications, développer des sites web et utiliser les meilleurs outils numériques.",
-  siteUrl: import.meta.env.VITE_SITE_URL || 'https://mahfoud.xyz',
-  gaMeasurementId: import.meta.env.VITE_GA_MEASUREMENT_ID || 'GA_MEASUREMENT_ID',
+  siteUrl: import.meta.env?.VITE_SITE_URL || 'https://mahfoud.xyz',
+  gaMeasurementId: import.meta.env?.VITE_GA_MEASUREMENT_ID || 'GA_MEASUREMENT_ID',
   adsensePublisherId: 'ca-pub-5562107411098538',
   contactEmail: 'mustaphasoufisme@gmail.com',
   creatorPlaceholder: {

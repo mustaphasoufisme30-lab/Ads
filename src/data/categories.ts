@@ -18,16 +18,16 @@ export interface CategoryInfo {
 }
 
 export const IMAGES = {
-  aiWorkspace: '/src/assets/images/techia_ai_workspace_1794109988578.jpg',
-  webappBuilder: '/src/assets/images/techia_webapp_builder_1794112664142.jpg',
-  pythonCoding: '/src/assets/images/techia_python_coding_1794109990983.jpg',
-  creatorDesk: '/src/assets/images/hero_mahfoud_method_1794016407072.jpg',
-  contentCreation: '/src/assets/images/techia_content_creation_1794112666253.jpg',
-  kdpPublishing: '/src/assets/images/techia_kdp_publishing_1794109992234.jpg',
-  digitalTools: '/src/assets/images/techia_digital_tools_1794109991891.jpg',
-  websiteDesign: '/src/assets/images/techia_website_design_1794112667607.jpg',
-  pythonBeginners: '/src/assets/images/techia_python_beginners_1794112668726.jpg',
-  workflowAutomation: '/src/assets/images/techia_workflow_automation_1794112668912.jpg',
+  aiWorkspace: '/images/techia_ai_workspace_1794109988578.jpg',
+  webappBuilder: '/images/techia_webapp_builder_1794112664142.jpg',
+  pythonCoding: '/images/techia_python_coding_1794109990983.jpg',
+  creatorDesk: '/images/hero_mahfoud_method_1794016407072.jpg',
+  contentCreation: '/images/techia_content_creation_1794112666253.jpg',
+  kdpPublishing: '/images/techia_kdp_publishing_1794109992234.jpg',
+  digitalTools: '/images/techia_digital_tools_1794109991891.jpg',
+  websiteDesign: '/images/techia_website_design_1794112667607.jpg',
+  pythonBeginners: '/images/techia_python_beginners_1794112668726.jpg',
+  workflowAutomation: '/images/techia_workflow_automation_1794112668912.jpg',
 };
 
 export const CATEGORIES: CategoryInfo[] = [
